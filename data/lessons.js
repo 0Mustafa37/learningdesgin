@@ -418,7 +418,7 @@ window.MODULES = [
     lessons: [
       {
         id: "read-replicas",
-        title: "Read Replicas",
+        title: "Replication",
         subtitle: "Scale reads by copying the database, and live with the lag.",
         minutes: 8,
         level: "Intermediate",
