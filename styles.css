@@ -608,3 +608,8 @@ body.vc-watching .stage-slot { outline: 3px solid var(--accent); outline-offset:
 .clip-dialog form { display: flex; justify-content: flex-end; padding: 8px; }
 
 .vc-row .vc-lang { grid-column: 1 / -1; font-size: 12px; padding: 5px 8px; }
+
+.vc-script { margin: 6px 0 2px; border: 1.5px solid var(--hair); border-radius: 10px; background: var(--panel); font-size: 13px; }
+.vc-script summary { cursor: pointer; padding: 8px 10px; font-weight: 700; }
+.vc-script p { margin: 0; padding: 0 12px 12px; line-height: 1.6; }
+.vc-script p[dir="rtl"] { font: 500 15px/1.85 "Noto Naskh Arabic", "Segoe UI", Tahoma, sans-serif; text-align: right; }

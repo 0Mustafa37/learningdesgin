@@ -98,7 +98,12 @@
     lessons: () => Object.values(LESSON).filter((l) => l.track).map((l) => [l.id, l.steps.length]),
     /* narration text for a step: one source of truth for the browser voice and the generated audio */
     narration: (id, i) => narrationFor(LESSON[id], i),
-    narrations: () => Object.values(LESSON).filter((l) => l.track).flatMap((l) => l.steps.map((_, i) => [`${l.id}/${i}`, narrationFor(l, i)])),
+    narrations: () => Object.values(LESSON).filter((l) => l.track).flatMap((l) => l.steps.map((st, i) => (st.tag === "lab" ? null : [`${l.id}/${i}`, narrationFor(l, i)])).filter(Boolean)),
+    /* everything a script writer needs to explain one lesson well */
+    lessonContext: (id) => { const l = LESSON[id], name = (n) => (l.nodes.find((x) => x.id === n) || {}).label || n; return {
+      id, title: l.title, subtitle: l.subtitle, level: l.level, deep: l.deep.map(plain), interview: l.iv.map(plain), qa: l.qa ? plain(l.qa.short) : undefined,
+      steps: l.steps.filter((st) => st.tag !== "lab").map((st, i) => ({ key: `${id}/${i}`, kind: st.tag, title: st.title, text: st.body.map(plain).join(" "), keyIdea: st.key,
+        diagram: st.flows.map(([a, b, k]) => (a === b ? `${name(a)} is busy` : `${name(a)} → ${name(b)} (${k})`)).join("; "), setup: (st.setup || []).map(([k, v]) => `${k}: ${v}`).join("; "), code: st.code, codeNote: st.note })) }; },
     arNarrations: () => Object.entries(window.AR_KEYS || {}).flatMap(([id, arr]) => arr.map((t, i) => [`${id}/${i}/ar`, t])),
     goStep: (i) => goStep(i),
     steps: (id) => LESSON[id].steps.map((st) => ({ tag: st.tag, title: st.title, short: st.short })),

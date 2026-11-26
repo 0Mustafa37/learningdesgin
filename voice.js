@@ -4,16 +4,24 @@
   const A = window.ATLAS;
   if (!A) return;
   const hash = (s) => { let h = 5381; for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0; return h.toString(16); };
-  let manifest = {}, arText = {};
-  fetch("assets/voice/ar-text.json", { cache: "no-cache" }).then((r) => (r.ok ? r.json() : {})).then((m) => { arText = m; }).catch(() => {});
+  let manifest = {}, scripts = {};
+  fetch("assets/voice/scripts.json", { cache: "no-cache" }).then((r) => (r.ok ? r.json() : {})).then((m) => { scripts = m; paintScript(); }).catch(() => {});
   const lang = () => (A.store.data.voiceLang === "ar" ? "ar" : "en");
-  /* Arabic narration: the full translation when it matches the current English text, else the Arabic key idea */
-  const arNarration = (id, idx, en) => {
-    const t = arText[`${id}/${idx}`];
-    if (t && t.src === hash(en)) return t.ar;
-    const k = (window.AR_KEYS || {})[id]?.[idx];
-    return k ? `الفكرة الأساسية: ${k}` : null;
+  /* narration scripts (English + Egyptian Arabic) when they were written for the current version of the step */
+  const scriptFor = (id, idx, en) => { const t = scripts[`${id}/${idx}`] || (window.SCRIPTS_GOLD || {})[`${id}/${idx}`]; return t && (!t.src || t.src === hash(en)) ? t : null; };
+  const arNarration = (id, idx, en) => scriptFor(id, idx, en)?.ar || null;
+  const paintScript = () => {
+    const row = $(".vc-row"); if (!row || !cur.id) return;
+    let d = $(".vc-script");
+    const sc = scriptFor(cur.id, cur.idx, A.narration(cur.id, cur.idx));
+    if (!sc) { d?.remove(); return; }
+    if (!d) { d = document.createElement("details"); d.className = "vc-script"; row.after(d); }
+    const ar = lang() === "ar"; d.dir = ar ? "rtl" : "ltr";
+    d.innerHTML = `<summary>${ar ? "📜 الشرح الكامل" : "📜 Full explanation"}</summary><p ${ar ? 'dir="rtl" lang="ar"' : ""}></p>`;
+    d.querySelector("p").textContent = ar ? sc.ar : sc.en;
   };
+  /* the browser's own Arabic voices are robotic, except the neural ones (Edge: "Microsoft Salma/Shakir Online (Natural)") */
+  const naturalArabic = () => synth && synth.getVoices().filter((v) => /^ar/i.test(v.lang) && /natural|online|neural/i.test(v.name)).sort((a, b) => /eg/i.test(b.lang) - /eg/i.test(a.lang))[0];
   fetch("assets/voice/manifest.json", { cache: "no-cache" }).then((r) => (r.ok ? r.json() : {})).then((m) => { manifest = m.files || {}; }).catch(() => {});
   const synth = window.speechSynthesis;
   const pickVoice = (lang) => {
@@ -39,6 +47,7 @@
     d.innerHTML = `<video controls autoplay playsinline preload="metadata" poster="assets/clips/${id}.jpg" src="assets/clips/${id}.mp4"></video><form method="dialog"><button class="btn">Close</button></form>`;
     d.addEventListener("close", () => d.remove()); document.body.appendChild(d); d.showModal();
   };
+  let warned = false;
   let cur = { id: null, idx: -1 }, mode = null, token = 0, audio = null, stepStart = 0;
   const $ = (s) => document.querySelector(s);
   const sentences = (t) => t.match(/[^.!?]+[.!?]+["”)]?\s*|[^.!?]+$/g)?.map((x) => x.trim()).filter(Boolean) || [t];
@@ -53,7 +62,7 @@
   const stopAll = () => { token++; synth?.cancel(); if (audio) { audio.pause(); audio = null; } caption(""); };
   const paintButtons = () => {
     const say = $("#vcSay"), watch = $("#vcWatch"), lg = $("#vcLang");
-    if (lg) { lg.textContent = lang() === "ar" ? "الصوت: عربي" : "Voice: English"; lg.dir = lang() === "ar" ? "rtl" : "ltr"; lg.setAttribute("aria-label", "Narration language"); }
+    if (lg) { lg.textContent = lang() === "ar" ? "الصوت: مصري" : "Voice: English"; lg.dir = lang() === "ar" ? "rtl" : "ltr"; lg.setAttribute("aria-label", "Narration language"); }
     if (say) { say.textContent = mode === "say" ? "■ Stop" : "🔊 Listen"; say.setAttribute("aria-pressed", mode === "say"); }
     if (watch) { watch.textContent = mode === "watch" ? "■ Stop video" : "▶ Play as video"; watch.setAttribute("aria-pressed", mode === "watch"); watch.classList.toggle("btn-primary", mode === "watch"); }
     document.body.classList.toggle("vc-watching", mode === "watch");
@@ -73,8 +82,12 @@
     browserSpeak(text, lang, my).then(done);
   });
   const browserSpeak = async (text, lang, my) => {
+    if (lang === "ar" && !naturalArabic()) { // no robot voice for Arabic: captions only
+      for (const p of sentences(text)) { if (my !== token) return; caption(p); await new Promise((r) => setTimeout(r, 70 * p.length + 600)); }
+      return;
+    }
     if (!synth) { for (const p of sentences(text)) { if (my !== token) return; caption(p); await new Promise((r) => setTimeout(r, 60 * p.length)); } return; }
-    const voice = pickVoice(lang);
+    const voice = lang === "ar" ? naturalArabic() : pickVoice(lang);
     for (const p of sentences(text)) {
       if (my !== token) return;
       caption(p);
@@ -88,11 +101,15 @@
 
   const playStep = async () => {
     const my = ++token; synth?.cancel(); if (audio) { audio.pause(); audio = null; }
-    const { id, idx } = cur, en = A.narration(id, idx), ar = lang() === "ar" ? arNarration(id, idx, en) : null;
+    const { id, idx } = cur, base = A.narration(id, idx), en = scriptFor(id, idx, base)?.en || base, ar = lang() === "ar" ? arNarration(id, idx, base) : null;
     stepStart = performance.now();
     window.Stage3D?.replay();
     if (ar) await speak(ar, `${id}/${idx}/ar`, "ar", my);
-    else await speak(en, `${id}/${idx}`, "en", my);
+    else if (lang() === "ar") {
+      /* no Egyptian version of this step yet: say so once, then use English */
+      if (!warned) { warned = true; caption("الصوت المصري للخطوة دي لسه بيتجهز، هنسمعها بالإنجليزي دلوقتي."); await new Promise((r) => setTimeout(r, 2600)); }
+      if (my === token) await speak(en, `${id}/${idx}`, "en", my);
+    } else await speak(en, `${id}/${idx}`, "en", my);
     if (my !== token) return;
     if (mode === "watch") {
       const minShow = 6000 - (performance.now() - stepStart);
@@ -112,8 +129,8 @@
       cur = { id, idx };
       if (moved && mode && !autoNav) { mode = null; stopAll(); }
       const wasAuto = autoNav; autoNav = false;
-      paintButtons(); addClipBadge();
-      $("#vcLang")?.addEventListener("click", () => { A.store.data.voiceLang = lang() === "ar" ? "en" : "ar"; A.store.save(); paintButtons(); if (mode) playStep(); });
+      paintButtons(); addClipBadge(); paintScript();
+      $("#vcLang")?.addEventListener("click", () => { A.store.data.voiceLang = lang() === "ar" ? "en" : "ar"; A.store.save(); paintButtons(); paintScript(); if (mode) playStep(); });
       $("#vcSay")?.addEventListener("click", () => { if (mode) { mode = null; stopAll(); paintButtons(); return; } mode = "say"; paintButtons(); playStep(); });
       $("#vcWatch")?.addEventListener("click", () => { if (mode === "watch") { mode = null; stopAll(); paintButtons(); return; } mode = "watch"; paintButtons(); $("#stageSlot")?.scrollIntoView({ block: "nearest", behavior: "smooth" }); playStep(); });
       if (wasAuto && mode === "watch") requestAnimationFrame(playStep);
