@@ -23,6 +23,9 @@ window.TRACKS = [
     modules: [
       { id: "consistency-problems", title: "Duplicates & Consistency", color: "#d06050", lessons: ["dual-write", "duplicate-requests", "lost-update", "exactly-once", "distributed-locks", "stale-reads", "ordering-clocks", "split-brain"] },
       { id: "load-problems", title: "Load & Failure", color: "#e69138", lessons: ["thundering-herd", "hot-partition", "retry-storms", "poison-messages", "backpressure", "pagination-at-scale"] },
+      { id: "senior-production", title: "Senior: Production Problems", color: "#3d85c6", lessons: ["zero-downtime-migrations", "rollback-safety", "noisy-neighbour", "tail-latency"] },
+      { id: "lead-delivery", title: "Team Lead: Delivery & Incidents", color: "#8e7cc3", lessons: ["incident-response", "progressive-delivery", "error-budgets", "strangler-migration"] },
+      { id: "cto-strategy", title: "CTO: Architecture & Strategy", color: "#c27ba0", lessons: ["build-vs-buy", "disaster-recovery", "cell-architecture", "conways-law", "cloud-costs"] },
     ],
   },
 ];
