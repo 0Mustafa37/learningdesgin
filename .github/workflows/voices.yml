@@ -5,8 +5,9 @@ on:
   workflow_dispatch:
     inputs:
       max: { description: "Files to generate in this run", default: "90" }
-      voice: { description: "English voice (e.g. Kore, Charon, Puck, Aoede)", default: "Kore" }
-      ar_voice: { description: "Egyptian Arabic voice (e.g. Sulafat, Charon, Achird, Algieba)", default: "Sulafat" }
+      engine: { description: "edge (free, no daily limit, Egyptian neural voices) or gemini (needs billing for volume)", default: "edge" }
+      voice: { description: "English voice; blank = default (edge: en-US-AndrewMultilingualNeural, gemini: Kore)", default: "" }
+      ar_voice: { description: "Egyptian voice; blank = default (edge: ar-EG-ShakirNeural or ar-EG-SalmaNeural, gemini: Sulafat)", default: "" }
       only: { description: "Only keys matching this regex (blank = all)", default: "" }
       lang: { description: "en, ar or both", default: "both" }
   schedule:
@@ -30,10 +31,10 @@ jobs:
         with: { python-version: "3.12" }
       - name: Install
         if: steps.key.outputs.skip != '1'
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg && pip install playwright && python -m playwright install --with-deps chromium
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg && pip install playwright edge-tts && python -m playwright install --with-deps chromium
       - name: Generate
         if: steps.key.outputs.skip != '1'
-        run: python tools/make_voices.py --max "${{ github.event.inputs.max || '90' }}" --voice "${{ github.event.inputs.voice || 'Kore' }}" --ar-voice "${{ github.event.inputs.ar_voice || 'Sulafat' }}" --only "${{ github.event.inputs.only }}" --lang "${{ github.event.inputs.lang || 'both' }}"
+        run: python tools/make_voices.py --max "${{ github.event.inputs.max || '90' }}" --engine "${{ github.event.inputs.engine || 'edge' }}" --voice "${{ github.event.inputs.voice }}" --ar-voice "${{ github.event.inputs.ar_voice }}" --only "${{ github.event.inputs.only }}" --lang "${{ github.event.inputs.lang || 'both' }}"
       - name: Commit (also after a failure, so finished work is kept)
         if: always() && steps.key.outputs.skip != '1'
         run: |

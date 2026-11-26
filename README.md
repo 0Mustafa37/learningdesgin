@@ -24,7 +24,7 @@ python3 -m http.server 8000
 
 1. Create a key at [Google AI Studio](https://aistudio.google.com/apikey).
 2. In the repo: Settings → Secrets and variables → Actions → New repository secret, name `GEMINI_API_KEY`.
-3. Actions → **voices** → Run workflow. English uses `voice` (Kore by default); the Arabic narration is rewritten in **Egyptian colloquial Arabic** and voiced with `ar_voice` (Sulafat by default) using the `ar-EG` accent. Try one lesson first with `only` = `^timeouts-retries/` and `lang` = `ar`.
+3. Actions → **voices** → Run workflow. The default engine, `edge`, uses Microsoft neural voices (Egyptian `ar-EG-ShakirNeural` / `ar-EG-SalmaNeural`, English `en-US-AndrewMultilingualNeural`): free, no daily limit, whole course in one run. `gemini` uses Gemini TTS. English uses `voice` (Kore by default); the Arabic narration is rewritten in **Egyptian colloquial Arabic** and voiced with `ar_voice` (Sulafat by default) using the `ar-EG` accent. Try one lesson first with `only` = `^timeouts-retries/` and `lang` = `ar`.
 
 The free tier allows only about 10 voice files a day. Enabling billing on the AI Studio project lifts that (the whole course is a few hundred thousand characters, typically a dollar or two).
 

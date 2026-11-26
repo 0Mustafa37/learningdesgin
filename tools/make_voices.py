@@ -135,6 +135,32 @@ def tts(text, lang, key, model, voice):
     return base64.b64decode(part["data"]), rate
 
 
+EDGE_DEFAULT = {"en": "en-US-AndrewMultilingualNeural", "ar": "ar-EG-ShakirNeural"}
+
+
+def edge_tts_file(text, voice, path):
+    """Microsoft neural voices (the 'Read aloud' voices in Edge). No key and no daily quota; ar-EG voices speak Egyptian."""
+    import asyncio, edge_tts
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    asyncio.run(edge_tts.Communicate(text, voice, rate="-4%").save(path))
+
+
+def duration(path):
+    out = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", path], capture_output=True, text=True).stdout
+    try:
+        return float(out)
+    except ValueError:
+        return 0.0
+
+
+def sane(path, text, lang):
+    """Reject truncated, silent or runaway audio (e.g. a model that also read its instructions aloud)."""
+    words = len(text.split())
+    expect = words / (2.2 if lang == "ar" else 2.5)
+    d = duration(path)
+    return 0.5 * expect <= d <= 1.9 * expect + 3, d, expect
+
+
 def to_mp3(pcm, rate, path):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "s16le", "-ar", str(rate), "-ac", "1", "-i", "pipe:0", "-b:a", "40k", path], input=pcm, check=True)
@@ -145,22 +171,29 @@ def main():
     ap.add_argument("--max", type=int, default=90, help="files to generate this run (free-tier quotas are small)")
     ap.add_argument("--rpm", type=float, default=8, help="requests per minute")
     ap.add_argument("--model", default=os.environ.get("TTS_MODEL", "gemini-3.1-flash-tts-preview"))
-    ap.add_argument("--voice", default=os.environ.get("TTS_VOICE", "Kore"), help="English voice")
-    ap.add_argument("--ar-voice", default=os.environ.get("TTS_AR_VOICE", "Sulafat"), help="Egyptian Arabic voice")
+    ap.add_argument("--engine", default=os.environ.get("TTS_ENGINE", "edge"), choices=["edge", "gemini"], help="edge = Microsoft neural voices (free, no quota); gemini = Gemini TTS (needs billing for volume)")
+    ap.add_argument("--voice", default=os.environ.get("TTS_VOICE", ""), help="English voice (default: en-US-AndrewMultilingualNeural / Kore)")
+    ap.add_argument("--ar-voice", default=os.environ.get("TTS_AR_VOICE", ""), help="Egyptian voice (default: ar-EG-ShakirNeural / Sulafat; ar-EG-SalmaNeural is the female edge voice)")
     ap.add_argument("--only", default="", help="regex on keys, e.g. '^timeouts-retries/'")
     ap.add_argument("--lang", default="both", choices=["en", "ar", "both"], help="which narration to voice")
     ap.add_argument("--text-model", default=os.environ.get("TEXT_MODEL", "gemini-3.5-flash"), help="model that writes the narration scripts")
-    ap.add_argument("--scripts-max", type=int, default=40, help="lessons to write scripts for this run")
+    ap.add_argument("--scripts-max", type=int, default=120, help="lessons to write scripts for this run")
     ap.add_argument("--fake", action="store_true", help="write silent files instead of calling the API (for testing)")
     a = ap.parse_args()
+    if a.engine == "edge":
+        a.voice, a.ar_voice = a.voice or EDGE_DEFAULT["en"], a.ar_voice or EDGE_DEFAULT["ar"]
+        a.rpm = max(a.rpm, 60)
+        a.max = max(a.max, 2000)
+    else:
+        a.voice, a.ar_voice = a.voice or "Kore", a.ar_voice or "Sulafat"
     key = os.environ.get("GEMINI_API_KEY", "")
-    if not key and not a.fake:
+    if not key and not a.fake and a.engine == "gemini":
         sys.exit("GEMINI_API_KEY is not set. Create a key at https://aistudio.google.com/apikey and add it as a repository secret.")
 
     man = json.load(open(MANIFEST)) if os.path.exists(MANIFEST) else {}
     files = man.setdefault("files", {})
-    man.update({"model": a.model, "voice": a.voice, "ar_voice": a.ar_voice})
-    voice_for = lambda lang: a.ar_voice if lang == "ar" else a.voice
+    man.update({"engine": a.engine, "model": a.model if a.engine == "gemini" else "edge-tts", "voice": a.voice, "ar_voice": a.ar_voice})
+    voice_for = lambda lang: (a.ar_voice if lang == "ar" else a.voice) if a.engine == "gemini" else f"edge:{a.ar_voice if lang == 'ar' else a.voice}"
     en, lessons, gold = narrations()
     scripts = json.load(open(SCRIPTS)) if os.path.exists(SCRIPTS) else {}
     base = dict(en)
@@ -193,52 +226,59 @@ def main():
     want = {k for k, _, _ in items}
     for k in [k for k in files if k not in want and (a.lang == "both" or k.endswith("/ar") == (a.lang == "ar"))]:  # steps that no longer exist
         files.pop(k)
-    fresh = lambda k, t, lang: k in files and files[k]["h"] == js_hash(t) and files[k].get("v", man.get("voice")) == voice_for(lang) and os.path.exists(os.path.join(VOICE_DIR, files[k]["f"]))
+    fresh = lambda k, t, lang: k in files and files[k]["h"] == js_hash(t) and files[k].get("v") == voice_for(lang) and os.path.exists(os.path.join(VOICE_DIR, files[k]["f"]))
     todo = [(k, t, lang) for k, t, lang in items if (not a.only or re.search(a.only, k)) and not fresh(k, t, lang)]
     print(f"{len(items)} narrations, {len(todo)} to generate, generating up to {a.max} now.")
-    done, gap = 0, 60.0 / a.rpm
+    done, rejected, gap = 0, 0, 60.0 / a.rpm
     for k, text, lang in todo[: a.max]:
         rel = k.replace("/ar", "-ar") + ".mp3"
-        t0 = time.time()
-        for attempt in range(5):
+        path = os.path.join(VOICE_DIR, rel)
+        t0, ok, stop = time.time(), False, False
+        for attempt in range(3):
             try:
                 if a.fake:
-                    pcm, rate = b"\x00\x00" * 24000, 24000
+                    to_mp3(b"\x00\x00" * 24000 * max(1, int(len(text.split()) / 2.4)), 24000, path)
+                elif a.engine == "edge":
+                    edge_tts_file(text, voice_for(lang).split(":", 1)[1], path)
                 else:
                     pcm, rate = tts(text, lang, key, a.model, voice_for(lang))
-                break
+                    to_mp3(pcm, rate, path)
             except urllib.error.HTTPError as e:
                 msg = e.read().decode(errors="replace")
                 if e.code == 429 and ("PerDay" in msg or "per day" in msg.lower()):
                     print("Daily quota reached; the next scheduled run continues from here.")
-                    attempt = None
+                    stop = True
                     break
-                if e.code in (429, 500, 503) and attempt < 4:
-                    wait = int((re.search(r'"retryDelay":\s*"(\d+)s"', msg) or [0, 30 * (attempt + 1)])[1])
-                    print(f"{k}: HTTP {e.code}, retrying in {wait}s")
-                    time.sleep(wait)
-                    continue
-                print(f"{k}: HTTP {e.code}: {msg[:300]}")
-                attempt = None
+                wait = int((re.search(r'"retryDelay":\s*"(\d+)s"', msg) or [0, 30 * (attempt + 1)])[1])
+                print(f"{k}: HTTP {e.code}, retrying in {wait}s")
+                time.sleep(wait)
+                continue
+            except Exception as e:  # network blips, edge-tts hiccups
+                print(f"{k}: {type(e).__name__} {e}, retrying")
+                time.sleep(10 * (attempt + 1))
+                continue
+            good, d, expect = sane(path, text, lang)
+            if good or a.fake:
+                ok = True
                 break
-            except (urllib.error.URLError, TimeoutError, OSError, KeyError, IndexError) as e:
-                if attempt < 4:
-                    print(f"{k}: {type(e).__name__}, retrying")
-                    time.sleep(10 * (attempt + 1))
-                    continue
-                print(f"{k}: {e}")
-                attempt = None
-                break
-        if attempt is None:
+            print(f"{k}: audio looks wrong ({d:.0f}s for ~{expect:.0f}s of text), retrying")
+        if stop:
             break
-        to_mp3(pcm, rate, os.path.join(VOICE_DIR, rel))
+        if not ok:
+            rejected += 1
+            if os.path.exists(path):
+                os.remove(path)
+            files.pop(k, None)
+            print(f"✗ {k}: skipped (the site falls back for this step)")
+            continue
         files[k] = {"f": rel, "h": js_hash(text), "v": voice_for(lang)}
         done += 1
-        json.dump(man, open(MANIFEST, "w"), ensure_ascii=False, indent=0, sort_keys=True)
+        if done % 10 == 0:
+            json.dump(man, open(MANIFEST, "w"), ensure_ascii=False, indent=0, sort_keys=True)
         print(f"✓ {k}")
         time.sleep(max(0, gap - (time.time() - t0)))
     json.dump(man, open(MANIFEST, "w"), ensure_ascii=False, indent=0, sort_keys=True)
-    print(f"generated {done}; {len(todo) - done} left")
+    print(f"generated {done}, rejected {rejected}; {len(todo) - done} left")
 
 
 if __name__ == "__main__":
