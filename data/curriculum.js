@@ -15,6 +15,8 @@ window.TRACKS = [
       { id: "security", title: "Security", color: "#c27ba0", lessons: ["authentication", "authorization", "encryption-secrets"] },
       { id: "shipping", title: "Shipping", color: "#93a33b", lessons: ["testing", "ci-cd"] },
       { id: "whole-systems", title: "Whole Systems", color: "#5b6d8a", lessons: ["hld-lld", "url-shortener", "news-feed", "chat-system"] },
+      { id: "data-intensive", title: "Data-Intensive Patterns", color: "#7a68b8", lessons: ["cdc", "event-sourcing", "search-indexing"] },
+      { id: "field-designs", title: "Designs from the Field", color: "#2f7a5a", lessons: ["field-service-design", "live-tracking-design"] },
     ],
   },
   {
