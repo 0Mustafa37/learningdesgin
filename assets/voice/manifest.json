@@ -1,5 +1,6 @@
 {
-"ar_voice": "Sulafat",
+"ar_voice": "ar-EG-ShakirNeural",
+"engine": "edge",
 "files": {
 "napkin-math/0": {
 "f": "napkin-math/0.mp3",
@@ -35,6 +36,41 @@
 "f": "stateless-services/1.mp3",
 "h": "383babd2"
 },
+"timeouts-retries/0": {
+"f": "timeouts-retries/0.mp3",
+"h": "a518c5b8",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"timeouts-retries/1": {
+"f": "timeouts-retries/1.mp3",
+"h": "70d0d354",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"timeouts-retries/1/ar": {
+"f": "timeouts-retries/1-ar.mp3",
+"h": "4c073219",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"timeouts-retries/2": {
+"f": "timeouts-retries/2.mp3",
+"h": "86c21c6",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"timeouts-retries/2/ar": {
+"f": "timeouts-retries/2-ar.mp3",
+"h": "22c382cf",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"timeouts-retries/3": {
+"f": "timeouts-retries/3.mp3",
+"h": "a91442ee",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"timeouts-retries/3/ar": {
+"f": "timeouts-retries/3-ar.mp3",
+"h": "67311cd0",
+"v": "edge:ar-EG-ShakirNeural"
+},
 "vertical-vs-horizontal/0": {
 "f": "vertical-vs-horizontal/0.mp3",
 "h": "433d6322"
@@ -52,6 +88,6 @@
 "h": "e08c3f4b"
 }
 },
-"model": "gemini-3.1-flash-tts-preview",
-"voice": "Kore"
+"model": "edge-tts",
+"voice": "en-US-AndrewMultilingualNeural"
 }
