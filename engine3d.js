@@ -631,6 +631,7 @@ const E = {
   detach() { running = false; cancelAnimationFrame(raf); root.remove(); },
   show(l, idx) { if (failed) return; if (!lesson || lesson.id !== l.id) load(l, idx); else if (idx !== stepIdx) setStep(idx); },
   replay() { clock = 0; intro = 0; setPaused(false); },
+  restep(l) { if (failed || !lesson) return; lesson = l; setStep(stepIdx); setPaused(false); },
   togglePause() { setPaused(!paused); return paused; },
   isPaused: () => paused,
   resetView() { Object.assign(view, DEF(), { focus: null, zoom: 1 }); },

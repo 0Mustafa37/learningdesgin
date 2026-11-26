@@ -2,6 +2,8 @@
 <html lang="en" data-theme="light">
 <head>
   <meta charset="utf-8" />
+  <!-- Set content to the deployed sync-api URL to turn on cross-device progress sync. -->
+  <meta name="atlas-sync" content="" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Backend Atlas</title>
   <meta name="description" content="3D animated system design lessons, classic interview problems and senior Django interview questions: revision before interviews." />
@@ -13,10 +15,11 @@
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta name="twitter:card" content="summary_large_image" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20261126e" />
+  <link rel="modulepreload" href="vendor/three.module.min.js" />
+  <link rel="modulepreload" href="engine3d.js?v=20261126f" />
+  <link rel="preload" href="assets/fonts/jetbrains-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="assets/fonts/space-grotesk-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="styles.css?v=20261126f" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='3' y='3' width='26' height='26' rx='6' fill='%23c9e4a8' stroke='%231d1b18' stroke-width='2.5'/%3E%3Cpath d='M10 21l6-10 6 10' fill='none' stroke='%231d1b18' stroke-width='2.5' stroke-linejoin='round'/%3E%3C/svg%3E" />
 </head>
 <body>
@@ -55,24 +58,28 @@
     </div>
   </div>
 
-  <script src="data/dsl.js?v=20261126e"></script>
-  <script src="data/lessons.js?v=20261126e"></script>
-  <script src="data/sd-foundations-scaling.js?v=20261126e"></script>
-  <script src="data/sd-data.js?v=20261126e"></script>
-  <script src="data/sd-comm-reliability.js?v=20261126e"></script>
-  <script src="data/sd-arch-security.js?v=20261126e"></script>
-  <script src="data/sd-systems.js?v=20261126e"></script>
-  <script src="data/sd-more.js?v=20261126e"></script>
-  <script src="data/interview-problems.js?v=20261126e"></script>
-  <script src="data/ip-depth.js?v=20261126e"></script>
-  <script src="data/ip-leadership.js?v=20261126e"></script>
-  <script src="data/django.js?v=20261126e"></script>
-  <script src="data/django-scenes.js?v=20261126e"></script>
-  <script src="data/django-depth.js?v=20261126e"></script>
-  <script src="data/curriculum.js?v=20261126e"></script>
-  <script src="data/sd-depth.js?v=20261126e"></script>
-  <script src="data/sd-depth2.js?v=20261126e"></script>
-  <script src="app.js?v=20261126e"></script>
-  <script type="module" src="engine3d.js?v=20261126e"></script>
+  <script src="data/dsl.js?v=20261126f"></script>
+  <script src="data/lessons.js?v=20261126f"></script>
+  <script src="data/sd-foundations-scaling.js?v=20261126f"></script>
+  <script src="data/sd-data.js?v=20261126f"></script>
+  <script src="data/sd-comm-reliability.js?v=20261126f"></script>
+  <script src="data/sd-arch-security.js?v=20261126f"></script>
+  <script src="data/sd-systems.js?v=20261126f"></script>
+  <script src="data/sd-more.js?v=20261126f"></script>
+  <script src="data/interview-problems.js?v=20261126f"></script>
+  <script src="data/ip-depth.js?v=20261126f"></script>
+  <script src="data/ip-leadership.js?v=20261126f"></script>
+  <script src="data/django.js?v=20261126f"></script>
+  <script src="data/django-scenes.js?v=20261126f"></script>
+  <script src="data/django-depth.js?v=20261126f"></script>
+  <script src="data/curriculum.js?v=20261126f"></script>
+  <script src="data/sd-depth.js?v=20261126f"></script>
+  <script src="data/sd-depth2.js?v=20261126f"></script>
+  <script src="data/openers.js?v=20261126f"></script>
+  <script src="data/labs.js?v=20261126f"></script>
+  <script src="draw.js?v=20261126f"></script>
+  <script src="app.js?v=20261126f"></script>
+  <script src="sync.js?v=20261126f"></script>
+  <script type="module" src="engine3d.js?v=20261126f"></script>
 </body>
 </html>

@@ -42,6 +42,8 @@
     metrics: s.m || s.metrics || {},
     ev: s.ev, fx: s.fx, L: s.L, gate: s.gate, g: s.g, setup: s.setup, code: s.code, note: s.note,
   });
+  /* "Try it" lab: an extra last step rebuilt from the controls in the side panel */
+  const labStep = (lab, params) => ({ ...normStep({ t: "lab", s: "Try it", h: lab.h, b: lab.b, ...lab.make(params) }), lab, params });
   const normLesson = (l, extra = {}) => ({
     id: l.id,
     title: l.title,
@@ -55,7 +57,7 @@
     metricKeys: l.mk || l.metricKeys || [],
     nodes: l.nodes.map((n) => ({ ...n, kind: n.kind || guessKind(n.id) })),
     code: l.code || null,
-    steps: l.steps.map(normStep),
+    steps: l.steps.map(normStep).concat((window.LABS || {})[l.id] ? [labStep(window.LABS[l.id], Object.fromEntries(window.LABS[l.id].controls.map((c) => [c.id, c.def])))] : []),
     ...extra,
   });
 
@@ -91,6 +93,8 @@
     return { data, save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(data)); } catch (_) {} } };
   })();
 
+  window.ATLAS = { store, rerender: () => window.dispatchEvent(new HashChangeEvent("hashchange")) };
+
   /* ───────── theme (light by default) ───────── */
   const applyTheme = () => { document.documentElement.dataset.theme = store.data.theme === "dark" ? "dark" : "light"; };
   applyTheme();
@@ -113,6 +117,7 @@
     const parts = location.hash.replace(/^#\/?/, "").split("/").filter(Boolean);
     if (parts[0] === "django") return { name: "django", q: parts[1] === "q" ? parts[2] : null };
     if (parts[0] === "practice") return { name: "practice" };
+    if (parts[0] === "draw" && window.DRAW) return { name: "draw", id: parts[1] };
     if (!parts.length || parts[0] === "home") return { name: "home" };
     if (parts[0] === "lesson" && LESSON[parts[1]] && LESSON[parts[1]].track) return { name: "lesson", id: parts[1], step: Number(parts[2]) || 0 };
     return { name: "lesson", id: ORDER[0], step: 0 };
@@ -148,7 +153,7 @@
         }).join("")}
       </div>`;
     }).join(`<hr class="side-divider" />`);
-    const top = `<nav class="side-top"><a class="${state.route.name === "home" ? "active" : ""}" href="#/">${ico("home")}Home</a><a class="${state.route.name === "practice" ? "active" : ""}" href="#/practice">${ico("timer")}Practice</a></nav>`;
+    const top = `<nav class="side-top"><a class="${state.route.name === "home" ? "active" : ""}" href="#/">${ico("home")}Home</a><a class="${state.route.name === "practice" ? "active" : ""}" href="#/practice">${ico("timer")}Practice</a><a class="${state.route.name === "draw" ? "active" : ""}" href="#/draw">${ico("target")}Draw</a></nav>`;
     $("#sidebar").innerHTML = top + html + `
       <div class="card progress-card"><div style="flex:1">PROGRESS
         <div class="bar"><i style="width:${(done / ORDER.length) * 100}%"></i></div></div>
@@ -257,7 +262,7 @@
             ${lesson.steps.map((s, i) => `<button class="step-dot ${i === stepIdx ? "current" : ""} ${i < stepIdx ? "seen" : ""}" data-step="${i}"><i>${i + 1}</i>${esc(s.short)}</button>`).join("")}
           </div>
         </div>
-        ${q ? `
+        <div class="lesson-extra">${q ? `
         <div class="card detail-card">
           <div class="detail-head"><h3>Model answer</h3>${markButtons(q)}</div>
           ${answerHtml(q)}
@@ -267,7 +272,7 @@
           ${lesson.deep.length ? `<div class="card detail-card"><h3>Deep dive</h3><ul class="deep">${lesson.deep.map((d) => `<li>${d}</li>`).join("")}</ul></div>` : ""}
           ${lesson.iv.length ? `<div class="card detail-card iv"><h3>In the interview</h3><ul class="deep">${lesson.iv.map((d) => `<li>${d}</li>`).join("")}</ul></div>` : ""}
         </div>
-        ${lesson.refs.length ? `<div class="card detail-card">${refsHtml(lesson.refs)}</div>` : ""}`}
+        ${lesson.refs.length ? `<div class="card detail-card">${refsHtml(lesson.refs)}</div>` : ""}`}</div>
       </section>`;
 
     const nextLabel = next ? `Next: ${esc(next.short)} →` : nextLessonId ? `Next: ${esc(LESSON[nextLessonId].title)} →` : `Django Q&amp;A →`;
@@ -277,7 +282,8 @@
         <h2>${esc(step.title)}</h2>
         ${step.body.map((p) => `<p>${p}</p>`).join("")}
         ${step.key ? `<div class="key-idea"><small>KEY IDEA</small>${esc(step.key)}</div>` : ""}
-        ${step.setup ? `<div class="sec">THE SETUP</div><div class="setup">${step.setup.map(([k, v, c]) => `<div class="${c || ""}"><span>${esc(k)}</span><span>${esc(v)}</span></div>`).join("")}</div>` : ""}
+        ${step.lab ? `<div class="sec">CHANGE THE SETUP</div><div class="lab">${step.lab.controls.map((c) => `<div class="lab-row"><span>${esc(c.label)}</span><div class="seg" role="group" aria-label="${esc(c.label)}">${c.opts.map(([lbl, v], i) => `<button class="${step.params[c.id] === v ? "on" : ""}" data-lc="${c.id}" data-li="${i}" aria-pressed="${step.params[c.id] === v}">${esc(lbl)}</button>`).join("")}</div></div>`).join("")}</div>` : ""}
+        ${step.setup ? `<div class="sec">${step.lab ? "WHAT HAPPENED" : "THE SETUP"}</div><div class="setup">${step.setup.map(([k, v, c]) => `<div class="${c || ""}"><span>${esc(k)}</span><span>${esc(v)}</span></div>`).join("")}</div>` : ""}
         ${step.code ? `<div class="sec">IN CODE <button class="btn copy" id="copyCode">${ico("copy")}Copy</button></div><pre class="code"><code>${highlight(step.code)}</code></pre>${step.note ? `<p class="code-note">${esc(step.note)}</p>` : ""}` : ""}
         <div class="nav-row">
           <button class="btn" id="backBtn" ${stepIdx === 0 ? "disabled" : ""}>← Back</button>
@@ -296,6 +302,8 @@
         <ul class="learn-list">${lesson.learn.map((t, i) => `<li class="${(i + 1) / lesson.learn.length <= (stepIdx + 1) / lesson.steps.length ? "got" : ""}">${esc(t)}</li>`).join("")}</ul>
       </section>`}`;
 
+    /* narrow screens: step panel right under the stage, reading material after it */
+    if (matchMedia("(max-width: 1180px)").matches) { const x = $("#main .lesson-extra"); if (x) $("#aside").append(x); }
     mountStage(lesson, stepIdx);
     $("#copyLink").onclick = async (ev) => { const b = ev.currentTarget, url = location.href.split("#")[0] + `#/lesson/${lesson.id}/${stepIdx}`; try { await navigator.clipboard.writeText(url); b.innerHTML = ico("check") + "Link copied"; } catch (_) { b.textContent = url; } };
     const cp = $("#copyCode");
@@ -306,6 +314,12 @@
       else location.hash = nextLessonId ? `#/lesson/${nextLessonId}` : "#/django";
     };
     $$(".step-dot").forEach((b) => (b.onclick = () => goStep(Number(b.dataset.step))));
+    $$("[data-lc]").forEach((b) => (b.onclick = () => {
+      const c = step.lab.controls.find((x) => x.id === b.dataset.lc), params = { ...step.params, [c.id]: c.opts[Number(b.dataset.li)][1] };
+      lesson.steps[stepIdx] = labStep(step.lab, params);
+      renderLesson(); stage()?.restep(lesson);
+      const again = $(`[data-lc="${c.id}"][data-li="${b.dataset.li}"]`); if (again) again.focus();
+    }));
     if (q) bindMarks($("#main"), () => { renderLesson(); renderSidebar(); });
   };
 
@@ -528,11 +542,13 @@
         <p class="home-big">${done}<small> / ${ORDER.length} lessons</small></p>
         <div class="bar"><i style="width:${(done / ORDER.length) * 100}%"></i></div>
         ${practiceSummary()}
+        <div id="syncSlot"></div>
       </section>
       <section class="card panel">
         <div class="panel-top"><span>HOW TO USE IT</span></div>
-        <ol class="how-list"><li>Watch a walkthrough step by step with the arrow keys.</li><li>Read the trace and the code for each step.</li><li>Answer it out loud in practice mode, then grade yourself.</li></ol><a class="btn" href="#/practice">Open practice mode</a>
+        <ol class="how-list"><li>Watch a walkthrough step by step with the arrow keys.</li><li>Read the trace and the code for each step.</li><li>Answer it out loud in practice mode, then grade yourself.</li></ol><a class="btn" href="#/practice">Open practice mode</a> <a class="btn" href="#/draw">Draw a design yourself</a>
       </section>`;
+    window.SYNC?.mount($("#syncSlot"));
     const l = LESSON[SHOWCASE];
     if (l) mountStage(l, 3);
   };
@@ -672,6 +688,10 @@
     } else if (r.name === "home") {
       renderSidebar(); renderHome();
       document.title = "Backend Atlas · 3D backend interview prep";
+    } else if (r.name === "draw") {
+      renderSidebar(); stage()?.detach(); clearInterval(pr.timer); $("#layout").classList.remove("wide");
+      window.DRAW.render($("#main"), $("#aside"), r.id);
+      document.title = "Draw it yourself · Backend Atlas";
     } else if (r.name === "practice") {
       renderSidebar(); renderPractice();
       document.title = "Practice · Backend Atlas";
