@@ -95,7 +95,22 @@
 
   window.ATLAS = { store, rerender: () => window.dispatchEvent(new HashChangeEvent("hashchange")),
     /* for tests: every routable lesson and its step count */
-    lessons: () => Object.values(LESSON).filter((l) => l.track).map((l) => [l.id, l.steps.length]) };
+    lessons: () => Object.values(LESSON).filter((l) => l.track).map((l) => [l.id, l.steps.length]),
+    /* narration text for a step: one source of truth for the browser voice and the generated audio */
+    narration: (id, i) => narrationFor(LESSON[id], i),
+    narrations: () => Object.values(LESSON).filter((l) => l.track).flatMap((l) => l.steps.map((_, i) => [`${l.id}/${i}`, narrationFor(l, i)])),
+    arNarrations: () => Object.entries(window.AR_KEYS || {}).flatMap(([id, arr]) => arr.map((t, i) => [`${id}/${i}/ar`, t])),
+    goStep: (i) => goStep(i),
+    steps: (id) => LESSON[id].steps.map((st) => ({ tag: st.tag, title: st.title, short: st.short })),
+    lessonTitle: (id) => [LESSON[id].title, LESSON[id].subtitle],
+    current: () => (state.route.name === "lesson" ? { id: state.route.id, idx: state.step, n: LESSON[state.route.id].steps.length } : null) };
+  const plain = (h) => String(h).replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/\s+/g, " ").trim();
+  function narrationFor(l, i) {
+    const s = l && l.steps[i]; if (!s) return "";
+    const parts = [s.title.replace(/[.:]?$/, ".")].concat(s.body.map(plain));
+    if (s.key) parts.push(`Key idea: ${s.key.replace(/[.]?$/, ".")}`);
+    return parts.join(" ").replace(/→/g, " then ").replace(/≈/g, "about ").replace(/×/g, " times ").replace(/ · /g, ", ").replace(/\s+/g, " ").trim();
+  }
 
   /* ───────── theme (light by default) ───────── */
   const applyTheme = () => { document.documentElement.dataset.theme = store.data.theme === "dark" ? "dark" : "light"; };
@@ -288,6 +303,7 @@
         ${step.lab ? `<div class="sec">CHANGE THE SETUP</div><div class="lab">${step.lab.controls.map((c) => `<div class="lab-row"><span>${esc(c.label)}</span><div class="seg" role="group" aria-label="${esc(c.label)}">${c.opts.map(([lbl, v], i) => `<button class="${step.params[c.id] === v ? "on" : ""}" data-lc="${c.id}" data-li="${i}" aria-pressed="${step.params[c.id] === v}">${esc(lbl)}</button>`).join("")}</div></div>`).join("")}</div>` : ""}
         ${step.setup ? `<div class="sec">${step.lab ? "WHAT HAPPENED" : "THE SETUP"}</div><div class="setup">${step.setup.map(([k, v, c]) => `<div class="${c || ""}"><span>${esc(k)}</span><span>${esc(v)}</span></div>`).join("")}</div>` : ""}
         ${step.code ? `<div class="sec">IN CODE <button class="btn copy" id="copyCode">${ico("copy")}Copy</button></div><pre class="code"><code>${step.lang === "text" ? esc(step.code) : highlight(step.code)}</code></pre>${step.note ? `<p class="code-note">${esc(step.note)}</p>` : ""}` : ""}
+        <div class="vc-row"><button class="btn" id="vcSay" aria-pressed="false">🔊 Listen</button><button class="btn" id="vcWatch" aria-pressed="false">▶ Play as video</button><button class="btn vc-lang" id="vcLang">Voice: English</button></div>
         <div class="nav-row">
           <button class="btn" id="backBtn" ${stepIdx === 0 ? "disabled" : ""}>← Back</button>
           <button class="btn btn-primary" id="nextBtn">${nextLabel}</button>
@@ -308,6 +324,7 @@
     /* narrow screens: step panel right under the stage, reading material after it */
     if (matchMedia("(max-width: 1180px)").matches) { const x = $("#main .lesson-extra"); if (x) $("#aside").append(x); }
     mountStage(lesson, stepIdx);
+    window.VOICE?.bind(lesson.id, stepIdx);
     $("#copyLink").onclick = async (ev) => { const b = ev.currentTarget, url = location.href.split("#")[0] + `#/lesson/${lesson.id}/${stepIdx}`; try { await navigator.clipboard.writeText(url); b.innerHTML = ico("check") + "Link copied"; } catch (_) { b.textContent = url; } };
     const cp = $("#copyCode");
     if (cp) cp.onclick = async () => { try { await navigator.clipboard.writeText(step.code); cp.innerHTML = ico("check") + "Copied"; } catch (_) { cp.textContent = "Select the code to copy"; } };
@@ -629,10 +646,12 @@
         <h1 class="pr-q">${esc(promptFor(l))}</h1>
         <div class="pr-timer ${pr.phase}"><span id="prClock">${pr.phase === "review" ? fmt(pr.elapsed) : fmt(pr.minutes * 60000)}</span>${pr.phase === "review" ? `<span class="muted-s">your answer took ${fmt(pr.elapsed)} of ${pr.minutes}:00</span>` : ""}
           ${pr.phase === "ready" ? `<button class="btn btn-primary" id="prStart">${ico("timer")}Start answering out loud</button>` : ""}
+          ${pr.phase === "answer" && SR ? `<button class="btn ${pr.mic ? "btn-primary rec" : ""}" id="prMic" aria-pressed="${!!pr.mic}">${pr.mic ? "● Listening… tap to stop" : "🎤 Answer by voice"}</button>` : ""}
           ${pr.phase === "answer" ? `<button class="btn btn-primary" id="prReveal">I'm done: show the checklist</button>` : ""}
           <button class="btn" id="prSkip">Skip</button></div>
-        ${pr.phase === "review" ? `
-          <div class="sec">DID YOU COVER…</div>
+        ${pr.phase === "answer" && SR ? `<div class="pr-transcript ${pr.transcript ? "" : "empty"}" id="prTx">${pr.transcript ? esc(pr.transcript) : "Your spoken answer will appear here."}</div>` : ""}
+        ${pr.phase === "review" ? `${pr.transcript ? `<details class="pr-said"><summary>What you said (${pr.transcript.split(/\s+/).length} words)</summary><p>${esc(pr.transcript)}</p></details>` : ""}
+          <div class="sec">DID YOU COVER…${pr.autoTicked ? ` <span class="muted-s">· ${pr.autoTicked} ticked from what you said, check them</span>` : ""}</div>
           <ul class="pr-checks">${list.map((x, i) => `<li><label><input type="checkbox" data-ci="${i}" ${pr.checks.has(i) ? "checked" : ""}> ${esc(x)}</label></li>`).join("")}</ul>
           ${l.qa ? `<div class="key-idea"><small>ONE-LINE ANSWER</small>${esc(l.qa.short)}</div>` : ""}
           ${l.iv.length ? `<div class="sec">WHAT INTERVIEWERS LISTEN FOR</div><ul class="deep">${l.iv.map((x) => `<li>${x}</li>`).join("")}</ul>` : ""}
@@ -645,13 +664,19 @@
     $$("[data-lv]").forEach((b) => (b.onclick = () => { pr.level = b.dataset.lv; pr.id = null; pr.session = null; renderPractice(); }));
     $("#prTrack").onchange = (e) => { pr.track = e.target.value; pr.id = null; renderPractice(); };
     $("#prMin").onchange = (e) => { pr.minutes = Number(e.target.value); renderPractice(); };
-    $("#prSkip")?.addEventListener("click", () => { if (pr.session) { pr.elapsed = pr.phase === "answer" ? Date.now() - pr.t0 : 0; recordSession("missed", 0); } else pickPractice(); renderPractice(); });
+    $("#prSkip")?.addEventListener("click", () => { stopMic(); pr.transcript = "";  if (pr.session) { pr.elapsed = pr.phase === "answer" ? Date.now() - pr.t0 : 0; recordSession("missed", 0); } else pickPractice(); renderPractice(); });
     $$("[data-mock]").forEach((b) => (b.onclick = () => { startSession(Number(b.dataset.mock)); renderPractice(); }));
     $("#prQuit")?.addEventListener("click", () => { pr.session = null; pickPractice(); renderPractice(); });
-    $("#prStart")?.addEventListener("click", () => { pr.phase = "answer"; pr.t0 = Date.now(); renderPractice(); });
-    $("#prReveal")?.addEventListener("click", () => { pr.phase = "review"; pr.elapsed = Date.now() - pr.t0; renderPractice(); });
+    $("#prStart")?.addEventListener("click", () => { pr.phase = "answer"; pr.t0 = Date.now(); pr.transcript = ""; pr.autoTicked = 0; renderPractice(); });
+    $("#prMic")?.addEventListener("click", () => (pr.mic ? stopMic() : startMic()));
+    $("#prReveal")?.addEventListener("click", () => {
+      stopMic(); pr.phase = "review"; pr.elapsed = Date.now() - pr.t0;
+      if (pr.transcript) { const hits = list.map((x, i) => (covers(pr.transcript, x) ? i : -1)).filter((i) => i >= 0); hits.forEach((i) => pr.checks.add(i)); pr.autoTicked = hits.length; }
+      renderPractice();
+    });
     $$("[data-ci]").forEach((c) => (c.onchange = () => { const i = Number(c.dataset.ci); c.checked ? pr.checks.add(i) : pr.checks.delete(i); }));
     $$("[data-g]").forEach((b) => (b.onclick = () => {
+      stopMic(); pr.transcript = ""; pr.autoTicked = 0;
       const covered = list.length ? pr.checks.size / list.length : 0;
       store.data.practice[pr.id] = { grade: b.dataset.g, at: Date.now(), covered }; store.save();
       if (pr.session) recordSession(b.dataset.g, covered); else pickPractice();
@@ -662,6 +687,25 @@
       tick(); pr.timer = setInterval(tick, 250);
     }
   };
+  /* ───────── voice answers (Web Speech API: Chrome, Edge, Safari) ───────── */
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let rec = null;
+  const startMic = () => {
+    if (!SR) return;
+    rec = new SR(); rec.lang = "en-US"; rec.continuous = true; rec.interimResults = true;
+    const base = pr.transcript ? pr.transcript + " " : "";
+    rec.onresult = (e) => { let t = ""; for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript + " "; pr.transcript = (base + t).trim(); const el = $("#prTx"); if (el) { el.textContent = pr.transcript; el.classList.remove("empty"); } };
+    rec.onend = () => { if (pr.mic && rec) { try { rec.start(); } catch (_) {} } };
+    rec.onerror = (e) => { if (e.error === "not-allowed" || e.error === "service-not-allowed") { pr.mic = false; rec = null; const el = $("#prTx"); if (el) el.textContent = "Microphone permission was denied. Allow it in the address bar to answer by voice."; const b = $("#prMic"); if (b) b.textContent = "🎤 Answer by voice"; } };
+    pr.mic = true; try { rec.start(); } catch (_) {}
+    const b = $("#prMic"); if (b) { b.textContent = "● Listening… tap to stop"; b.classList.add("btn-primary", "rec"); }
+  };
+  const stopMic = () => { pr.mic = false; if (rec) { try { rec.stop(); } catch (_) {} rec = null; } const b = $("#prMic"); if (b) { b.textContent = "🎤 Answer by voice"; b.classList.remove("btn-primary", "rec"); } };
+  /* a checklist point counts as covered when most of its distinctive words (by 5-letter stem) were said */
+  const STOP = new Set("about after their there which where would could should these those every other into with from that this than then them they what when your have been were will just more most only also over under very much many some such each like make made does doing done using used".split(" "));
+  const stems = (t) => (t.toLowerCase().match(/[a-z0-9]+/g) || []).filter((w) => w.length > 3 && !STOP.has(w)).map((w) => w.slice(0, 5));
+  const covers = (said, point) => { const have = new Set(stems(said)), need = [...new Set(stems(point))]; if (!need.length) return false; return need.filter((w) => have.has(w)).length / need.length >= 0.5; };
+
   const practiceAside = () => {
     const P = store.data.practice, rows = Object.entries(P).filter(([id]) => LESSON[id]);
     const weak = rows.filter(([, v]) => v.grade !== "good").sort((a, b) => b[1].at - a[1].at).slice(0, 8);
@@ -725,6 +769,7 @@
   const render = () => {
     const r = parseRoute();
     const changed = r.name !== state.route.name || r.id !== state.route.id;
+    if (r.name !== "practice" && pr.mic) stopMic();
     state.route = r;
     if (r.name === "lesson") {
       state.step = r.step;

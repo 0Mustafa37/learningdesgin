@@ -1,0 +1,22 @@
+{
+ "anatomy-of-a-request": {
+  "secs": 131,
+  "voice": false
+ },
+ "caching": {
+  "secs": 75,
+  "voice": false
+ },
+ "message-queues": {
+  "secs": 52,
+  "voice": false
+ },
+ "retry-storms": {
+  "secs": 49,
+  "voice": false
+ },
+ "timeouts-retries": {
+  "secs": 55,
+  "voice": false
+ }
+}
