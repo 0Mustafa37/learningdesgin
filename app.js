@@ -112,14 +112,14 @@
   const parseRoute = () => {
     const parts = location.hash.replace(/^#\/?/, "").split("/").filter(Boolean);
     if (parts[0] === "django") return { name: "django", q: parts[1] === "q" ? parts[2] : null };
-    if (parts[0] === "lesson" && LESSON[parts[1]]) return { name: "lesson", id: parts[1], step: Number(parts[2]) || 0 };
+    if (parts[0] === "lesson" && LESSON[parts[1]] && LESSON[parts[1]].track) return { name: "lesson", id: parts[1], step: Number(parts[2]) || 0 };
     return { name: "lesson", id: ORDER[0], step: 0 };
   };
 
   /* ───────── sidebar ───────── */
   const isDone = (id) => !!store.data.lessons[id];
   const renderSidebar = () => {
-    const current = state.route.name === "lesson" ? LESSON[state.route.id] : null;
+    const current = state.route.name === "lesson" && LESSON[state.route.id]?.module ? LESSON[state.route.id] : null;
     const done = ORDER.filter(isDone).length;
     const known = QS.filter((q) => store.data.q[q.id] === "known").length;
     let n = 0;
