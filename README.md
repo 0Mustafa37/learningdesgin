@@ -5,8 +5,10 @@ Revision site for backend interviews, with a home page, a timed practice mode (`
 - **System Design**: 45 lessons in 11 modules (foundations, scaling, data & storage, communication, reliability, architecture, security, shipping, whole-system designs, data-intensive patterns, designs from the field).
 - **Interview Problems**: 27 problems. 14 classics: dual write, duplicate requests, lost update, exactly-once, distributed locks, stale reads, clocks, split brain, thundering herd, hot partitions, retry storms, poison messages, backpressure, pagination. Plus senior (zero-downtime migrations, rollback safety, noisy neighbours, tail latency), team-lead (incidents, canaries and flags, error budgets, strangler migrations) and CTO problems (build vs buy, disaster recovery, cells, Conway's law, cloud costs).
 - **Senior Django**: 30 questions, each with a 3D walkthrough, model answer, code, follow-ups and links to the official docs, plus a Q&A list with filters and a mock-interview drill.
-- **Try it labs**: Timeouts & Retries, Rate Limiting, Caching and Django connection pooling end with a step where you change the setup (timeout, retries, breaker, limiter, TTL, pooler…) and a small simulation replays the scene with your settings. Defined in `data/labs.js`.
-- **Draw it yourself** (`#/draw`): sketch a design on a board, then check it against a rubric of required parts, connections and red flags. `draw.js`.
+- **Try it labs** on 10 lessons: Timeouts & Retries, Rate Limiting, Caching, Load Balancing, Sharding, Message Queues, Retry Storms, Indexes (a PostgreSQL `EXPLAIN ANALYZE` lab), Django N+1 and connection pooling. Change the setup and a small simulation replays the scene with your settings. `data/labs.js`, `data/labs2.js`.
+- **Draw it yourself** (`#/draw`): 9 design problems on a board, checked against a rubric of required parts, connections and red flags, with a model answer to compare. `draw.js`.
+- **Today** (`#/today`): spaced-repetition review of finished lessons, weak practice answers and Django questions marked "review later" (Leitner boxes: 1, 2, 4, 8, 16, 32 days).
+- **Arabic key ideas** for every System Design step (toggle "عربي" on the key idea). `data/ar-keys.js`.
 - **Progress sync** (optional): a Django + DRF service in `sync-api/`. Off until the `atlas-sync` meta tag in `index.html` points at a deployed copy.
 
 No build step, but the 3D engine is an ES module, so serve the folder rather than opening `index.html` from disk:
@@ -14,6 +16,10 @@ No build step, but the 3D engine is an ES module, so serve the folder rather tha
 ```bash
 python3 -m http.server 8000
 ```
+
+## Checks
+
+`.github/workflows/checks.yml` runs on every pull request: syntax, `node tests/data.test.js` (every lab with every control combination, every draw model against its rubric), `python tests/sweep.py` (opens every lesson step in headless Chrome and fails on any console error) and the sync-api tests.
 
 ## 3D engine
 

@@ -1,0 +1,30 @@
+# One-click deploy of sync-api/ on Render: New → Blueprint → pick this repo.
+# Afterwards put the service URL in index.html: <meta name="atlas-sync" content="https://atlas-sync.onrender.com" />
+services:
+  - type: web
+    name: atlas-sync
+    runtime: docker
+    rootDir: sync-api
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALLOWED_HOSTS
+        value: .onrender.com
+      - key: ATLAS_ORIGINS
+        value: https://0mustafa37.github.io
+      - key: POSTGRES_HOST
+        fromDatabase: { name: atlas-sync-db, property: host }
+      - key: POSTGRES_PORT
+        fromDatabase: { name: atlas-sync-db, property: port }
+      - key: POSTGRES_DB
+        fromDatabase: { name: atlas-sync-db, property: database }
+      - key: POSTGRES_USER
+        fromDatabase: { name: atlas-sync-db, property: user }
+      - key: POSTGRES_PASSWORD
+        fromDatabase: { name: atlas-sync-db, property: password }
+databases:
+  - name: atlas-sync-db
+    plan: free

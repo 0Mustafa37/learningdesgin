@@ -5,6 +5,7 @@ Rules, chosen so that syncing never loses work:
   lessons   union: a lesson finished anywhere stays finished
   q         incoming wins per question (the device you just used is the freshest opinion)
   practice  per entry, the one with the later "at" timestamp wins; lists (session history) are unioned by "at"
+  srs       per review item, the one reviewed most recently ("seen") wins
   last      incoming wins
 Unknown keys are kept as they are, and UI-only keys (theme, openModules) are never stored.
 """
@@ -40,7 +41,14 @@ def merge(server: dict, incoming: dict) -> dict:
             practice[k] = v
     out["practice"] = practice
 
+    srs = dict(out.get("srs") or {})
+    for k, v in (incoming.get("srs") or {}).items():
+        mine = srs.get(k)
+        if not isinstance(mine, dict) or (isinstance(v, dict) and v.get("seen", 0) >= mine.get("seen", 0)):
+            srs[k] = v
+    out["srs"] = srs
+
     for k, v in incoming.items():
-        if k not in ("lessons", "q", "practice"):
+        if k not in ("lessons", "q", "practice", "srs"):
             out[k] = v
     return out

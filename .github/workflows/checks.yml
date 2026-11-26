@@ -1,0 +1,32 @@
+name: checks
+on:
+  pull_request:
+  push:
+    branches: [claude/gallant-brown-bks2tv, main]
+jobs:
+  site:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Syntax
+        run: for f in app.js draw.js sync.js data/*.js; do node --check "$f"; done && node --input-type=module --check < engine3d.js
+      - name: Labs and draw rubrics
+        run: node tests/data.test.js
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: Install Playwright
+        run: pip install playwright && python -m playwright install --with-deps chromium
+      - name: Open every lesson step
+        run: python tests/sweep.py
+  sync-api:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: sync-api } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -r requirements.txt
+      - run: python manage.py test

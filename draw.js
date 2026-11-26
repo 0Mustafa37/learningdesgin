@@ -70,11 +70,67 @@
         { link: ["edge", "blob"], why: "The CDN pulls from object storage." },
         { need: "worker", bonus: true, why: "A worker makes thumbnails when an upload finishes (triggered by a queue/event)." },
       ] },
+    { id: "rate-limiter", title: "API rate limiter", lesson: "rate-limiting", prompt: "Limit each API key to 100 requests per minute across 20 API servers, and tell clients when to retry.",
+      rules: [
+        { need: "lb", why: "Limit at the edge (API gateway / load balancer) so rejected traffic never reaches your app servers." },
+        { need: "cache", why: "Counters live in a shared, fast store (Redis) so all 20 servers see the same count." },
+        { link: ["lb", "cache"], alt: [["server", "cache"]], why: "Whoever enforces the limit does an atomic INCR (or token-bucket Lua script) per request." },
+        { link: ["lb", "server"], why: "Allowed requests continue to the API servers." },
+        { no: ["client", "server"], why: "A path from clients straight to the servers bypasses the limiter." },
+        { need: "server", why: "The API itself." },
+      ] },
+    { id: "notifications", title: "Notification service", lesson: "pub-sub", prompt: "Send push, email and SMS for events from many services. Respect user preferences, retry failures, never double-send.",
+      rules: [
+        { need: "server", why: "A notification API that other services call (or that consumes their events)." },
+        { need: "queue", why: "Every notification goes through a queue so spikes and provider outages don't block callers." },
+        { link: ["server", "queue"], why: "The API validates, applies preferences, then enqueues." },
+        { need: "worker", why: "Channel workers (push, email, SMS) drain the queue." },
+        { link: ["queue", "worker"], why: "Workers consume, retry with backoff and dead-letter poison messages." },
+        { need: "ext", why: "APNs/FCM, an email provider and an SMS gateway are third parties." },
+        { link: ["worker", "ext"], why: "Only workers talk to providers." },
+        { need: "db", why: "Preferences, templates and a sent-log (idempotency keys) so retries never double-send." },
+        { need: "cache", bonus: true, why: "Per-user rate limits and dedupe keys in Redis." },
+        { no: ["server", "ext"], why: "Calling providers inline makes every caller wait for (and fail with) the slowest provider." },
+      ] },
+    { id: "ride-tracking", title: "Live ride tracking", lesson: "live-tracking-design", prompt: "Drivers send GPS every 4 s; riders watch the car move live. 200k active drivers at peak.",
+      rules: [
+        { need: "lb", why: "Many ingest servers behind a balancer that supports WebSockets." },
+        { need: "server", why: "Ingest/gateway servers receive locations and push updates to riders." },
+        { need: "cache", why: "The latest position per driver (and a geo index) lives in memory, e.g. Redis GEO." },
+        { link: ["server", "cache"], why: "Each update overwrites the driver's latest position; riders read from there." },
+        { need: "queue", why: "A stream (Kafka) carries every point for history, ETA models and analytics." },
+        { link: ["server", "queue"], why: "Ingest publishes every point once." },
+        { need: "db", why: "Trip history in durable storage, written in batches." },
+        { link: ["worker", "db"], alt: [["queue", "db"]], why: "Consumers batch-write points; the hot path never waits on the database." },
+        { no: ["server", "db"], why: "Writing 50k points/s straight to the database from the request path is the classic bottleneck." },
+      ] },
+    { id: "file-sync", title: "File sync (Dropbox)", lesson: "files-media", prompt: "Sync folders across a user's devices. Files up to 10 GB; only changed parts should upload.",
+      rules: [
+        { need: "client", why: "Desktop/mobile clients that chunk files and hash chunks." },
+        { need: "blob", why: "Chunks live in object storage, addressed by their hash (dedupe for free)." },
+        { link: ["client", "blob"], why: "Clients upload changed chunks directly with presigned URLs." },
+        { need: "server", why: "A metadata service: files, versions, which chunks make each version." },
+        { need: "db", why: "Metadata in a transactional database." },
+        { link: ["server", "db"], why: "Commits a new version only after all its chunks exist." },
+        { need: "queue", why: "Change notifications (or long-poll) tell other devices to pull." },
+        { link: ["server", "queue"], why: "Each committed version emits an event." },
+        { no: ["client", "db"], why: "Clients never write metadata directly." },
+      ] },
   ];
+  const MODELS = {    "url-shortener": { units: [["client", 10, 230], ["lb", 190, 230], ["server", 370, 230], ["cache", 600, 90], ["db", 600, 230], ["queue", 600, 380], ["worker", 740, 460]], links: [[0, 1], [1, 2], [2, 3], [2, 4], [2, 5], [5, 6]] },
+    "news-feed": { units: [["client", 10, 230], ["edge", 10, 60], ["lb", 190, 230], ["server", 370, 230], ["db", 600, 100], ["cache", 600, 230], ["queue", 370, 400], ["worker", 600, 400]], links: [[0, 1], [0, 2], [2, 3], [3, 4], [3, 5], [3, 6], [6, 7], [7, 5], [7, 4]] },
+    "chat-system": { units: [["client", 10, 230], ["lb", 190, 230], ["server", 380, 120], ["server", 380, 340], ["queue", 620, 230], ["db", 620, 420], ["cache", 620, 40]], links: [[0, 1], [1, 2], [1, 3], [2, 4], [3, 4], [2, 5], [3, 5], [2, 6], [3, 6]] },
+    "receipts": { units: [["client", 10, 230], ["server", 210, 230], ["db", 210, 400], ["queue", 420, 230], ["worker", 620, 230], ["ext", 620, 400], ["blob", 620, 60]], links: [[0, 1], [1, 2], [1, 3], [3, 4], [4, 5], [4, 6]] },
+    "photo-upload": { units: [["client", 10, 230], ["server", 240, 100], ["db", 480, 40], ["blob", 300, 330], ["edge", 40, 440], ["queue", 540, 330], ["worker", 720, 200]], links: [[0, 1], [1, 2], [0, 3], [4, 3], [0, 4], [3, 5], [5, 6], [6, 3], [6, 2]] },
+    "rate-limiter": { units: [["client", 10, 230], ["lb", 230, 230], ["cache", 230, 420], ["server", 470, 120], ["server", 470, 340]], links: [[0, 1], [1, 2], [1, 3], [1, 4]] },
+    "notifications": { units: [["server", 10, 230], ["db", 10, 420], ["queue", 230, 230], ["worker", 450, 120], ["worker", 450, 340], ["ext", 700, 230], ["cache", 450, 470]], links: [[0, 1], [0, 2], [2, 3], [2, 4], [3, 5], [4, 5], [3, 6], [4, 6]] },
+    "ride-tracking": { units: [["client", 10, 230], ["lb", 190, 230], ["server", 370, 230], ["cache", 600, 90], ["queue", 600, 260], ["worker", 600, 430], ["db", 280, 430]], links: [[0, 1], [1, 2], [2, 3], [2, 4], [4, 5], [5, 6]] },
+    "file-sync": { units: [["client", 10, 120], ["client", 10, 360], ["server", 300, 230], ["db", 560, 120], ["blob", 300, 440], ["queue", 560, 340]], links: [[0, 2], [1, 2], [2, 3], [0, 4], [1, 4], [2, 5], [5, 1]] }
+  };
 
   const KEY = "atlas-draw-v1";
   const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (_) { return {}; } };
-  let saved = load(), cur = null, board = null, sel = null, drag = null, linking = null, result = null;
+  let saved = load(), cur = null, board = null, sel = null, drag = null, linking = null, result = null, showModel = false;
   const save = () => { saved[cur.id] = board; try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (_) {} };
   const W = 900, H = 520, UW = 156, UH = 54;
   /* phones get a tall board: positions are stored landscape and transposed for display */
@@ -96,14 +152,19 @@
     return { rows, got, total: core.length, bad: rows.filter((r) => r.avoid && !r.ok).length };
   };
 
+  const modelBoard = () => { const m = MODELS[cur.id]; return m ? { units: m.units.map(([k, x, y], i) => ({ id: "m" + i, k, x, y })), links: m.links.map(([a, b]) => ["m" + a, "m" + b]) } : null; };
   const svgBoard = () => {
+    if (showModel && modelBoard()) { const mine = board; board = modelBoard(); const html = svgBoardInner(true); board = mine; return html; }
+    return svgBoardInner(false);
+  };
+  const svgBoardInner = (model) => {
     const pos = (id) => { const u = unit(id); if (!u) return null; const [x, y] = scr(u); return [x + UW / 2, y + UH / 2]; };
     const links = board.links.map(([a, b], i) => { const p = pos(a), q = pos(b); if (!p || !q) return ""; return `<g class="dl ${sel === "l" + i ? "sel" : ""}" data-l="${i}"><line x1="${p[0]}" y1="${p[1]}" x2="${q[0]}" y2="${q[1]}" class="dl-hit"/><line x1="${p[0]}" y1="${p[1]}" x2="${q[0]}" y2="${q[1]}" class="dl-pipe"/></g>`; }).join("");
     const units = board.units.map((u) => `<g class="du k-${u.k} ${sel === u.id ? "sel" : ""} ${linking && linking.from === u.id ? "src" : ""}" data-u="${u.id}" transform="translate(${scr(u).join(",")})" tabindex="0" role="button" aria-label="${esc(KINDS[u.k][0])}">
         <rect width="${UW}" height="${UH}" rx="12" class="du-body"/><g transform="translate(12,15) scale(1)">${ic(KINDS[u.k][1]).replace('<svg class="i"', '<svg width="24" height="24"')}</g>
         <text x="44" y="${UH / 2 + 5}">${esc(KINDS[u.k][0])}</text><circle class="du-port" cx="${UW}" cy="${UH / 2}" r="7" data-port="${u.id}"/></g>`).join("");
     const ghost = linking && linking.x != null ? (() => { const p = pos(linking.from); return `<line class="dl-ghost" x1="${p[0]}" y1="${p[1]}" x2="${linking.x}" y2="${linking.y}"/>`; })() : "";
-    return `<svg class="draw-svg" viewBox="0 0 ${VW()} ${VH()}" preserveAspectRatio="xMidYMid meet">${links}${ghost}${units}${board.units.length ? "" : `<text x="${VW() / 2}" y="${VH() / 2}" class="draw-empty">${tall ? "Add parts below, then drag from a dot to connect." : "Add parts from the palette, then drag from a unit's dot to connect it."}</text>`}</svg>`;
+    return `<svg class="draw-svg ${model ? "is-model" : ""}" viewBox="0 0 ${VW()} ${VH()}" preserveAspectRatio="xMidYMid meet">${links}${ghost}${units}${board.units.length ? "" : `<text x="${VW() / 2}" y="${VH() / 2}" class="draw-empty">${tall ? "Add parts below, then drag from a dot to connect." : "Add parts from the palette, then drag from a unit's dot to connect it."}</text>`}</svg>`;
   };
 
   let mainEl, asideEl;
@@ -137,7 +198,7 @@
       <div class="nav-row"><button class="btn" id="drClear">Clear board</button><button class="btn btn-primary" id="drCheck">Check my design</button></div>
       ${r ? `<div class="sec">REVIEW · ${r.got} / ${r.total} core points${r.bad ? ` · ${r.bad} red flag` : ""}</div>
         <ul class="draw-review">${r.rows.map((x) => `<li class="${x.ok ? "ok" : x.avoid ? "bad" : x.bonus ? "bonus" : "miss"}"><b>${x.ok ? "✓" : x.avoid ? "✕" : x.bonus ? "+" : "○"} ${esc(x.text)}${x.bonus ? " (bonus)" : ""}</b><span>${esc(x.why)}</span></li>`).join("")}</ul>
-        <a class="btn link-btn" href="#/lesson/${cur.lesson}">Compare with the lesson →</a>` : ""}
+        <div class="nav-row"><button class="btn" id="drModel">${showModel ? "Hide" : "Show"} model answer</button><a class="btn" href="#/lesson/${cur.lesson}">Open the lesson →</a></div>` : `<button class="btn link-btn" id="drModel">${showModel ? "Hide" : "Peek at"} model answer</button>`}
     </section>
     <section class="card panel"><div class="panel-top"><span>OTHER PROBLEMS</span></div>
       <ul class="draw-list">${PROBLEMS.map((p) => `<li><a class="${p.id === cur.id ? "on" : ""}" href="#/draw/${p.id}">${esc(p.title)}</a>${saved[p.id] && saved[p.id].units.length ? `<small>${saved[p.id].units.length} parts</small>` : ""}</li>`).join("")}</ul></section>`;
@@ -148,13 +209,17 @@
         <div class="crumbs">Practice / Draw it yourself</div>
         <div class="title-row"><h1>${esc(cur.title)}</h1><div class="badges"><a class="badge b-violet" href="#/practice">Timed practice</a></div></div>
         <p class="subtitle">${esc(cur.prompt)}</p>
+        ${showModel ? `<p class="model-note">Model answer. One good design, not the only one. <button class="btn" id="drMine">Back to my design</button></p>` : ""}
         <div class="draw-board" tabindex="0" aria-label="Design board" style="aspect-ratio:${VW()} / ${VH()}">${svgBoard()}</div>
       </section>`;
     asideEl.innerHTML = asideHtml();
     asideEl.querySelectorAll("[data-add]").forEach((b) => (b.onclick = () => add(b.dataset.add)));
     asideEl.querySelector("#drClear").onclick = () => { board = { units: [], links: [] }; sel = null; result = null; save(); renderAll(); };
     asideEl.querySelector("#drCheck").onclick = () => { result = grade(); renderAll(); asideEl.querySelector(".draw-review")?.scrollIntoView({ block: "nearest", behavior: "smooth" }); };
+    asideEl.querySelector("#drModel")?.addEventListener("click", () => { showModel = !showModel; sel = null; renderAll(); });
+    mainEl.querySelector("#drMine")?.addEventListener("click", () => { showModel = false; renderAll(); });
     const bd = mainEl.querySelector(".draw-board");
+    if (showModel) return;
     bd.onpointerdown = (e) => {
       const [x, y] = toSvg(e), port = e.target.closest("[data-port]");
       if (port) { linking = { from: port.dataset.port, x, y }; bd.setPointerCapture(e.pointerId); return; }
@@ -182,10 +247,12 @@
 
   window.DRAW = {
     problems: PROBLEMS,
+    /* used by tests: grade the model answer against its own rubric */
+    checkModel(id) { cur = PROBLEMS.find((p) => p.id === id); const keep = board; board = modelBoard(); const r = grade(); board = keep; return r; },
     render(main, aside, id) {
       mainEl = main; asideEl = aside; tall = innerWidth < 640;
       cur = PROBLEMS.find((p) => p.id === id) || PROBLEMS[0];
-      saved = load(); board = saved[cur.id] || { units: [], links: [] }; sel = null; result = null; linking = null;
+      saved = load(); board = saved[cur.id] || { units: [], links: [] }; sel = null; result = null; linking = null; showModel = false;
       renderAll();
     },
   };
