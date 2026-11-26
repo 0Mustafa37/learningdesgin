@@ -31,7 +31,9 @@ python manage.py runserver
 
 ## Deploy
 
-Any container host works (Render, Fly.io, Railway). Set:
+Quickest: on Render choose **New → Blueprint** and pick this repo; `render.yaml` at the repo root creates the service and a Postgres database. On a free plan the service sleeps when idle, so the first sync of the day takes a few seconds.
+
+Any other container host works too (Fly.io, Railway). Set:
 
 ```
 SECRET_KEY=…            ALLOWED_HOSTS=atlas-sync.example.com

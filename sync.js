@@ -12,10 +12,10 @@
     return r.json();
   };
   const apply = (data) => {
-    const d = A.store.data, before = JSON.stringify([d.lessons, d.q, d.practice]);
-    ["lessons", "q", "practice"].forEach((k) => { if (data[k]) d[k] = data[k]; });
+    const d = A.store.data, before = JSON.stringify([d.lessons, d.q, d.practice, d.srs]);
+    ["lessons", "q", "practice", "srs"].forEach((k) => { if (data[k]) d[k] = data[k]; });
     if (data.last && !d.last) d.last = data.last;
-    origSave(); if (JSON.stringify([d.lessons, d.q, d.practice]) !== before) A.rerender();
+    origSave(); if (JSON.stringify([d.lessons, d.q, d.practice, d.srs]) !== before) A.rerender();
   };
   const push = async () => {
     if (!key || busy) return; busy = true;

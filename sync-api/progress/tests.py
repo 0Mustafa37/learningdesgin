@@ -24,6 +24,11 @@ class MergeTests(TestCase):
         out = merge({"practice": {"_s": [{"at": 1}, {"at": 3}]}}, {"practice": {"_s": [{"at": 2}, {"at": 3}]}})
         self.assertEqual([s["at"] for s in out["practice"]["_s"]], [1, 2, 3])
 
+    def test_most_recent_review_wins(self):
+        a, b = {"box": 3, "seen": 5}, {"box": 0, "seen": 9}
+        self.assertEqual(merge({"srs": {"l:x": a}}, {"srs": {"l:x": b}})["srs"]["l:x"], b)
+        self.assertEqual(merge({"srs": {"l:x": b}}, {"srs": {"l:x": a}})["srs"]["l:x"], b)
+
     def test_ui_only_keys_are_dropped(self):
         self.assertNotIn("theme", merge({}, {"theme": "dark", "openModules": {"x": 1}}))
 

@@ -40,7 +40,7 @@
     active: words(s.a ?? s.active ?? []),
     show: s.v || s.show ? words(s.v || s.show) : null,
     metrics: s.m || s.metrics || {},
-    ev: s.ev, fx: s.fx, L: s.L, gate: s.gate, g: s.g, setup: s.setup, code: s.code, note: s.note,
+    ev: s.ev, fx: s.fx, L: s.L, gate: s.gate, g: s.g, setup: s.setup, code: s.code, note: s.note, lang: s.lang,
   });
   /* "Try it" lab: an extra last step rebuilt from the controls in the side panel */
   const labStep = (lab, params) => ({ ...normStep({ t: "lab", s: "Try it", h: lab.h, b: lab.b, ...lab.make(params) }), lab, params });
@@ -93,7 +93,9 @@
     return { data, save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(data)); } catch (_) {} } };
   })();
 
-  window.ATLAS = { store, rerender: () => window.dispatchEvent(new HashChangeEvent("hashchange")) };
+  window.ATLAS = { store, rerender: () => window.dispatchEvent(new HashChangeEvent("hashchange")),
+    /* for tests: every routable lesson and its step count */
+    lessons: () => Object.values(LESSON).filter((l) => l.track).map((l) => [l.id, l.steps.length]) };
 
   /* ───────── theme (light by default) ───────── */
   const applyTheme = () => { document.documentElement.dataset.theme = store.data.theme === "dark" ? "dark" : "light"; };
@@ -118,6 +120,7 @@
     if (parts[0] === "django") return { name: "django", q: parts[1] === "q" ? parts[2] : null };
     if (parts[0] === "practice") return { name: "practice" };
     if (parts[0] === "draw" && window.DRAW) return { name: "draw", id: parts[1] };
+    if (parts[0] === "today") return { name: "today" };
     if (!parts.length || parts[0] === "home") return { name: "home" };
     if (parts[0] === "lesson" && LESSON[parts[1]] && LESSON[parts[1]].track) return { name: "lesson", id: parts[1], step: Number(parts[2]) || 0 };
     return { name: "lesson", id: ORDER[0], step: 0 };
@@ -153,7 +156,7 @@
         }).join("")}
       </div>`;
     }).join(`<hr class="side-divider" />`);
-    const top = `<nav class="side-top"><a class="${state.route.name === "home" ? "active" : ""}" href="#/">${ico("home")}Home</a><a class="${state.route.name === "practice" ? "active" : ""}" href="#/practice">${ico("timer")}Practice</a><a class="${state.route.name === "draw" ? "active" : ""}" href="#/draw">${ico("target")}Draw</a></nav>`;
+    const top = `<nav class="side-top"><a class="${state.route.name === "home" ? "active" : ""}" href="#/">${ico("home")}Home</a><a class="${state.route.name === "practice" ? "active" : ""}" href="#/practice">${ico("timer")}Practice</a><a class="${state.route.name === "draw" ? "active" : ""}" href="#/draw">${ico("target")}Draw</a><a class="${state.route.name === "today" ? "active" : ""}" href="#/today">${ico("check")}Today${(() => { const n = dueItems().length; return n ? ` <span class="today-n">${n}</span>` : ""; })()}</a></nav>`;
     $("#sidebar").innerHTML = top + html + `
       <div class="card progress-card"><div style="flex:1">PROGRESS
         <div class="bar"><i style="width:${(done / ORDER.length) * 100}%"></i></div></div>
@@ -281,10 +284,10 @@
         <div class="panel-top"><span>STEP ${stepIdx + 1} / ${lesson.steps.length}</span><span class="tag ${step.tag}">${step.tag}</span></div>
         <h2>${esc(step.title)}</h2>
         ${step.body.map((p) => `<p>${p}</p>`).join("")}
-        ${step.key ? `<div class="key-idea"><small>KEY IDEA</small>${esc(step.key)}</div>` : ""}
+        ${step.key ? (() => { const ar = step.tag !== "lab" && (window.AR_KEYS || {})[lesson.id]?.[stepIdx]; return `<div class="key-idea"><small>KEY IDEA${ar ? ` <button class="ar-toggle ${store.data.ar ? "on" : ""}" id="arBtn" aria-pressed="${!!store.data.ar}" title="Show the key idea in Arabic">عربي</button>` : ""}</small>${esc(step.key)}${ar && store.data.ar ? `<p class="key-ar" lang="ar" dir="rtl">${esc(ar)}</p>` : ""}</div>`; })() : ""}
         ${step.lab ? `<div class="sec">CHANGE THE SETUP</div><div class="lab">${step.lab.controls.map((c) => `<div class="lab-row"><span>${esc(c.label)}</span><div class="seg" role="group" aria-label="${esc(c.label)}">${c.opts.map(([lbl, v], i) => `<button class="${step.params[c.id] === v ? "on" : ""}" data-lc="${c.id}" data-li="${i}" aria-pressed="${step.params[c.id] === v}">${esc(lbl)}</button>`).join("")}</div></div>`).join("")}</div>` : ""}
         ${step.setup ? `<div class="sec">${step.lab ? "WHAT HAPPENED" : "THE SETUP"}</div><div class="setup">${step.setup.map(([k, v, c]) => `<div class="${c || ""}"><span>${esc(k)}</span><span>${esc(v)}</span></div>`).join("")}</div>` : ""}
-        ${step.code ? `<div class="sec">IN CODE <button class="btn copy" id="copyCode">${ico("copy")}Copy</button></div><pre class="code"><code>${highlight(step.code)}</code></pre>${step.note ? `<p class="code-note">${esc(step.note)}</p>` : ""}` : ""}
+        ${step.code ? `<div class="sec">IN CODE <button class="btn copy" id="copyCode">${ico("copy")}Copy</button></div><pre class="code"><code>${step.lang === "text" ? esc(step.code) : highlight(step.code)}</code></pre>${step.note ? `<p class="code-note">${esc(step.note)}</p>` : ""}` : ""}
         <div class="nav-row">
           <button class="btn" id="backBtn" ${stepIdx === 0 ? "disabled" : ""}>← Back</button>
           <button class="btn btn-primary" id="nextBtn">${nextLabel}</button>
@@ -308,6 +311,7 @@
     $("#copyLink").onclick = async (ev) => { const b = ev.currentTarget, url = location.href.split("#")[0] + `#/lesson/${lesson.id}/${stepIdx}`; try { await navigator.clipboard.writeText(url); b.innerHTML = ico("check") + "Link copied"; } catch (_) { b.textContent = url; } };
     const cp = $("#copyCode");
     if (cp) cp.onclick = async () => { try { await navigator.clipboard.writeText(step.code); cp.innerHTML = ico("check") + "Copied"; } catch (_) { cp.textContent = "Select the code to copy"; } };
+    $("#arBtn")?.addEventListener("click", () => { store.data.ar = !store.data.ar; store.save(); renderLesson(); });
     $("#backBtn").onclick = () => goStep(stepIdx - 1);
     $("#nextBtn").onclick = () => {
       if (next) goStep(stepIdx + 1);
@@ -672,6 +676,48 @@
   let resetArmed = 0;
   const confirmReset = () => { const b = $("#prReset"); if (Date.now() - resetArmed < 4000) return true; resetArmed = Date.now(); if (b) b.textContent = "Click again to reset"; return false; };
 
+
+  /* ───────── daily review (Leitner boxes: 1, 2, 4, 8, 16, 32 days) ───────── */
+  const DAY = 864e5, BOX = [1, 2, 4, 8, 16, 32];
+  const srs = () => (store.data.srs = store.data.srs || {});
+  const reviewItems = () => {
+    const S = srs(), now = Date.now();
+    Object.keys(store.data.lessons).filter((id) => LESSON[id] && !LESSON[id].qa).forEach((id) => { S["l:" + id] = S["l:" + id] || { box: 0, due: now + DAY }; });
+    Object.entries(store.data.practice || {}).forEach(([id, v]) => { if (LESSON[id] && v && v.grade && v.grade !== "good") { const it = (S["l:" + id] = S["l:" + id] || { box: 0, due: now }); if ((v.at || 0) > (it.weakAt || 0)) { it.box = 0; it.due = Math.min(it.due, now); it.weakAt = v.at || now; } } });
+    Object.entries(store.data.q).forEach(([id, v]) => { if (v === "review") S["q:" + id] = S["q:" + id] || { box: 0, due: now }; });
+    return Object.entries(S).filter(([k]) => (k[0] === "l" ? LESSON[k.slice(2)] : QS.some((q) => q.id === k.slice(2))));
+  };
+  const dueItems = () => reviewItems().filter(([, v]) => v.due <= Date.now()).sort((a, b) => a[1].due - b[1].due);
+  const todayState = { revealed: false };
+  const renderToday = () => {
+    stage()?.detach(); clearInterval(pr.timer); $("#layout").classList.remove("wide");
+    const due = dueItems(), all = reviewItems(), [key, it] = due[0] || [];
+    let card = "";
+    if (key) {
+      const isQ = key[0] === "q", id = key.slice(2), q = isQ && QS.find((x) => x.id === id), l = !isQ && LESSON[id];
+      const prompt = isQ ? q.q : `${l.title}: ${l.subtitle}`, label = isQ ? "Django question" : `${l.track.title} · ${l.module.title}`;
+      const answer = isQ ? `<div class="tldr">${esc(q.short)}</div>` : `<ul class="learn-list">${l.steps.filter((s) => s.key && s.tag !== "lab").map((s) => `<li class="got">${esc(s.key)}</li>`).join("")}</ul>`;
+      card = `<div class="card today-card">
+        <div class="crumbs">${esc(label)} · box ${it.box + 1} of ${BOX.length}</div>
+        <h2 class="pr-q">${esc(prompt)}</h2>
+        <p class="muted-s">${isQ ? "Answer it out loud first." : "Say the key ideas out loud first: what goes wrong, and what fixes it?"}</p>
+        ${todayState.revealed ? `${answer}<div class="nav-row"><button class="btn" data-rv="again">↺ Again (tomorrow)</button><button class="btn btn-primary" data-rv="good">✓ Got it (in ${BOX[Math.min(BOX.length - 1, it.box + 1)]} days)</button></div>
+          <a class="btn link-btn" href="${isQ ? `#/django/q/${id}` : `#/lesson/${id}`}">Open the ${isQ ? "answer" : "lesson"} →</a>` : `<button class="btn btn-primary" id="rvShow">Show the answer</button>`}
+      </div>`;
+    } else card = `<div class="card today-card"><h2 class="pr-q">${all.length ? "All done for today." : "Nothing to review yet."}</h2><p class="muted-s">${all.length ? `Next item comes back ${new Date(Math.min(...all.map(([, v]) => v.due))).toLocaleDateString([], { weekday: "long", day: "numeric", month: "short" })}.` : "Finish a lesson, grade yourself in Practice, or mark a Django question “Review later”, and it will come back here on a schedule."}</p><div class="nav-row"><a class="btn" href="#/practice">Practice</a><a class="btn" href="#/draw">Draw a design</a></div></div>`;
+    $("#main").innerHTML = `<section class="card stage"><div class="crumbs">Daily review</div><div class="title-row"><h1>Today</h1><div class="badges"><span class="badge b-amber">${ico("clock")}${due.length} due</span><span class="badge b-violet">${ico("steps")}${all.length} in rotation</span></div></div>
+      <p class="subtitle">Short recall, spaced out: items you know come back less and less often.</p>${card}</section>`;
+    const boxes = BOX.map((d, i) => `<li><span>Box ${i + 1} · every ${d} day${d > 1 ? "s" : ""}</span><b>${all.filter(([, v]) => v.box === i).length}</b></li>`).join("");
+    $("#aside").innerHTML = `<section class="card panel"><div class="panel-top"><span>HOW IT WORKS</span></div><p>Lessons you finish, practice answers you graded “partly” or “missed”, and Django questions you marked “Review later” come back here.</p><p>“Got it” moves an item to the next box, so it comes back later. “Again” sends it back to box 1, so you see it tomorrow.</p><ul class="today-boxes">${boxes}</ul></section>`;
+    $("#rvShow")?.addEventListener("click", () => { todayState.revealed = true; renderToday(); });
+    $$("[data-rv]").forEach((b) => (b.onclick = () => {
+      const S = srs(), v = S[key];
+      if (b.dataset.rv === "good") v.box = Math.min(BOX.length - 1, v.box + 1); else v.box = 0;
+      v.due = Date.now() + BOX[v.box] * DAY - 3600e3; v.seen = Date.now();
+      store.save(); todayState.revealed = false; renderToday(); renderSidebar();
+    }));
+  };
+
   /* ───────── offline support ───────── */
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
@@ -688,6 +734,9 @@
     } else if (r.name === "home") {
       renderSidebar(); renderHome();
       document.title = "Backend Atlas · 3D backend interview prep";
+    } else if (r.name === "today") {
+      renderSidebar(); todayState.revealed = false; renderToday();
+      document.title = "Today · Backend Atlas";
     } else if (r.name === "draw") {
       renderSidebar(); stage()?.detach(); clearInterval(pr.timer); $("#layout").classList.remove("wide");
       window.DRAW.render($("#main"), $("#aside"), r.id);

@@ -567,3 +567,21 @@ h1, h2, h3, .title-row h1, .panel h2, .detail-card h3, .home-hero h1, .pr-q, .dj
 .sync-key { display: block; padding: 6px 8px; border: 1px solid var(--hair); border-radius: 8px; background: var(--panel-2); word-break: break-all; font-size: 11.5px; }
 .sync-link { display: grid; gap: 4px; color: var(--muted); }
 .sync-link input { font: inherit; padding: 6px 8px; border: 1.5px solid var(--hair); border-radius: 8px; background: var(--panel); color: var(--ink); }
+
+.draw-svg.is-model .du-port { display: none; }
+.draw-svg.is-model .du { cursor: default; }
+.draw-svg.is-model .dl-pipe { stroke-dasharray: 2 9; stroke-width: 6; }
+.model-note { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 10px 0 0; padding: 8px 10px; border-radius: 10px; background: var(--violet); color: var(--violet-ink); font-size: 13px; }
+
+/* ═════════ daily review ═════════ */
+.today-card { margin-top: 14px; padding: 18px 20px; display: grid; gap: 10px; }
+.today-card .learn-list { margin: 0; }
+.today-n { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; margin-left: 4px; border-radius: 9px; background: var(--fail); color: #fff; font-size: 11px; font-weight: 800; }
+.today-boxes { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 4px; font-size: 12.5px; }
+.today-boxes li { display: flex; justify-content: space-between; border-bottom: 1px dashed var(--hair); padding: 3px 0; }
+
+/* ═════════ Arabic key ideas ═════════ */
+.key-idea small { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.ar-toggle { font: 700 12px/1 "Noto Naskh Arabic", "Segoe UI", Tahoma, sans-serif; padding: 3px 8px; border: 1px solid currentColor; border-radius: 999px; background: transparent; color: inherit; cursor: pointer; letter-spacing: 0; }
+.ar-toggle.on { background: var(--violet-ink); color: var(--violet); }
+.key-ar { margin: 8px 0 0; padding-top: 8px; border-top: 1px dashed currentColor; font: 500 15px/1.75 "Noto Naskh Arabic", "Noto Sans Arabic", "Segoe UI", Tahoma, sans-serif; text-align: right; }
