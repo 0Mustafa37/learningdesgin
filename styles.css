@@ -371,7 +371,7 @@ svg.i { width: 1em; height: 1em; flex: none; fill: none; stroke: currentColor; s
 .setup div span:first-child { color: var(--ink-2); }
 .setup div.hi { background: color-mix(in oklab, var(--accent), var(--panel) 40%); font-weight: 700; }
 .setup div.bad { background: color-mix(in oklab, var(--rose), var(--panel) 30%); font-weight: 700; }
-.panel pre.code { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 11.5px; }
+.panel pre.code { white-space: pre; overflow-x: auto; font-size: 11.5px; }
 .code-note { font-size: 11.5px; color: var(--muted) !important; margin-top: 6px !important; }
 @media (max-width: 720px) {
   .s3-bar { position: static; padding: 10px 10px 0; }
@@ -458,3 +458,11 @@ ul.deep li { margin-bottom: 6px; }
 .g-good { background: color-mix(in oklab, var(--accent), var(--panel) 40%); } .g-partly { background: color-mix(in oklab, var(--amber), var(--panel) 40%); } .g-missed { background: color-mix(in oklab, var(--rose), var(--panel) 40%); }
 .how-list { margin: 0 0 12px; padding-left: 18px; color: var(--ink-2); font-size: 12.5px; } .how-list li { margin-bottom: 6px; }
 .panel .btn[href] { display: inline-block; text-decoration: none; }
+.s3-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.pr-session { font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: var(--amber); border: 1.5px solid var(--line); }
+.pr-mock { border-color: var(--line); }
+.pr-table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 12.5px; }
+.pr-table th, .pr-table td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--hair); vertical-align: top; }
+.pr-table th { font-size: 10.5px; letter-spacing: .06em; color: var(--muted); text-transform: uppercase; }
+.pr-table td:nth-child(3), .pr-table td:nth-child(4) { font-variant-numeric: tabular-nums; white-space: nowrap; }
+@media (max-width: 600px) { .pr-table th:nth-child(2), .pr-table td:nth-child(2), .pr-table th:nth-child(4), .pr-table td:nth-child(4) { display: none; } }

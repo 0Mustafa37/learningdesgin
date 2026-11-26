@@ -539,7 +539,7 @@
 
   /* ───────── practice mode ───────── */
   const LEVELS = ["Beginner", "Intermediate", "Advanced", "Senior", "Staff", "Lead", "CTO"];
-  const pr = { level: "all", track: "all", minutes: 5, id: null, phase: "ready", t0: 0, timer: 0, checks: new Set() };
+  const pr = { level: "all", track: "all", minutes: 5, id: null, phase: "ready", t0: 0, timer: 0, checks: new Set(), session: null, elapsed: 0 };
   store.data.practice = store.data.practice || {};
   const practicePool = () => ORDER.filter((id) => { const l = LESSON[id]; return (pr.level === "all" || l.level === pr.level) && (pr.track === "all" || l.track.id === pr.track); });
   const pickPractice = () => {
@@ -547,6 +547,33 @@
     const P = store.data.practice, unseen = pool.filter((id) => !P[id] && id !== pr.id), weak = pool.filter((id) => P[id] && P[id].grade !== "good" && id !== pr.id);
     const from = unseen.length && Math.random() < 0.7 ? unseen : weak.length ? weak : pool.filter((id) => id !== pr.id).length ? pool.filter((id) => id !== pr.id) : pool;
     pr.id = from[Math.floor(Math.random() * from.length)]; pr.phase = "ready"; pr.checks = new Set();
+  };
+  const startSession = (n) => {
+    const pool = practicePool(), P = store.data.practice;
+    const shuffled = pool.map((id) => [id, (P[id] ? (P[id].grade === "good" ? 2 : 1) : 0) + Math.random()]).sort((a, b) => a[1] - b[1]).map(([id]) => id);
+    const ids = shuffled.slice(0, Math.min(n, shuffled.length));
+    if (!ids.length) return;
+    pr.session = { ids, idx: 0, results: [] }; pr.id = ids[0]; pr.phase = "ready"; pr.checks = new Set();
+  };
+  const recordSession = (grade, covered) => {
+    const S = pr.session; S.results.push({ id: pr.id, grade, covered, elapsed: pr.elapsed || 0 });
+    S.idx++;
+    if (S.idx < S.ids.length) { pr.id = S.ids[S.idx]; pr.phase = "ready"; pr.checks = new Set(); }
+    else pr.phase = "summary";
+  };
+  const sessionSummary = () => {
+    const S = pr.session, c = { good: 0, partly: 0, missed: 0 };
+    S.results.forEach((r) => (c[r.grade] = (c[r.grade] || 0) + 1));
+    const total = S.results.reduce((a, r) => a + r.elapsed, 0);
+    return `<section class="card pr-card">
+      <div class="crumbs">Mock interview · ${S.results.length} questions · ${fmt(total)} answering</div>
+      <h1 class="pr-q">${c.good === S.results.length ? "Clean sweep." : c.good >= S.results.length / 2 ? "Solid round. Close the gaps below." : "Worth another pass on these topics."}</h1>
+      <div class="pr-grades"><span class="g-good">${c.good} nailed</span><span class="g-partly">${c.partly} partly</span><span class="g-missed">${c.missed} missed</span></div>
+      <table class="pr-table"><thead><tr><th>Question</th><th>Level</th><th>Time</th><th>Checklist</th><th>Grade</th></tr></thead><tbody>
+      ${S.results.map((r) => { const l = LESSON[r.id]; return `<tr><td><a href="#/lesson/${r.id}">${esc(l.qa ? l.qa.q : l.title)}</a></td><td>${esc(l.level)}</td><td>${fmt(r.elapsed)}</td><td>${Math.round(r.covered * 100)}%</td><td><small class="g-${r.grade}">${r.grade}</small></td></tr>`; }).join("")}
+      </tbody></table>
+      <div class="pr-grade" style="margin-top:14px"><button class="btn btn-primary" id="prAgain">${ico("timer")}Another mock</button><button class="btn" id="prEnd">Back to single questions</button></div>
+    </section>`;
   };
   const promptFor = (l) => l.qa ? l.qa.q : l.track.id === "ip" ? `${l.subtitle} Walk me through how you'd handle it.` : `Explain ${l.title.toLowerCase()}: ${l.subtitle}`;
   const checklistFor = (l) => { const keys = l.steps.map((s) => s.key).filter(Boolean); return [...new Set([...(l.learn.length ? l.learn : []), ...keys])].slice(0, 8); };
@@ -560,16 +587,23 @@
   const renderPractice = () => {
     stage()?.detach(); clearInterval(pr.timer);
     $("#layout").classList.add("wide");
-    if (!pr.id || !LESSON[pr.id] || !practicePool().includes(pr.id)) pickPractice();
+    if (!pr.session && (!pr.id || !LESSON[pr.id] || !practicePool().includes(pr.id))) pickPractice();
     const l = pr.id && LESSON[pr.id];
     const tracks = TRACKS.map((t) => `<option value="${t.id}" ${pr.track === t.id ? "selected" : ""}>${esc(t.title)}</option>`).join("");
     const levels = LEVELS.filter((lv) => ORDER.some((id) => LESSON[id].level === lv)).map((lv) => `<button class="chip ${pr.level === lv ? "on" : ""}" data-lv="${lv}">${lv}</button>`).join("");
     const list = l ? checklistFor(l) : [];
+    if (pr.phase === "summary" && pr.session) {
+      $("#main").innerHTML = sessionSummary(); $("#aside").innerHTML = practiceAside();
+      $("#prAgain").onclick = () => { startSession(pr.session.ids.length); renderPractice(); };
+      $("#prEnd").onclick = () => { pr.session = null; pickPractice(); renderPractice(); };
+      return;
+    }
     $("#main").innerHTML = `
       <section class="card pr-card">
         <div class="pr-filters"><button class="chip ${pr.level === "all" ? "on" : ""}" data-lv="all">All levels</button>${levels}
           <select id="prTrack" aria-label="Track"><option value="all">All tracks</option>${tracks}</select>
-          <select id="prMin" aria-label="Time limit">${[3, 5, 10, 20].map((m) => `<option value="${m}" ${pr.minutes === m ? "selected" : ""}>${m} min</option>`).join("")}</select></div>
+          <select id="prMin" aria-label="Time limit">${[3, 5, 10, 20].map((m) => `<option value="${m}" ${pr.minutes === m ? "selected" : ""}>${m} min</option>`).join("")}</select>
+          ${pr.session ? `<span class="pr-session">Mock interview · question ${pr.session.idx + 1} of ${pr.session.ids.length}</span><button class="chip" id="prQuit">End mock</button>` : `<button class="chip pr-mock" data-mock="3">Mock: 3 questions</button><button class="chip pr-mock" data-mock="5">Mock: 5 questions</button>`}</div>
         ${l ? `
         <div class="crumbs">${esc(l.track.title)} / ${esc(l.module.title)} · <span class="badge">${esc(l.level)}</span></div>
         <h1 class="pr-q">${esc(promptFor(l))}</h1>
@@ -588,14 +622,21 @@
         ` : `<p>No lessons match these filters.</p>`}
       </section>`;
     $("#aside").innerHTML = practiceAside();
-    $$("[data-lv]").forEach((b) => (b.onclick = () => { pr.level = b.dataset.lv; pr.id = null; renderPractice(); }));
+    $$("[data-lv]").forEach((b) => (b.onclick = () => { pr.level = b.dataset.lv; pr.id = null; pr.session = null; renderPractice(); }));
     $("#prTrack").onchange = (e) => { pr.track = e.target.value; pr.id = null; renderPractice(); };
     $("#prMin").onchange = (e) => { pr.minutes = Number(e.target.value); renderPractice(); };
-    $("#prSkip")?.addEventListener("click", () => { pickPractice(); renderPractice(); });
+    $("#prSkip")?.addEventListener("click", () => { if (pr.session) { pr.elapsed = pr.phase === "answer" ? Date.now() - pr.t0 : 0; recordSession("missed", 0); } else pickPractice(); renderPractice(); });
+    $$("[data-mock]").forEach((b) => (b.onclick = () => { startSession(Number(b.dataset.mock)); renderPractice(); }));
+    $("#prQuit")?.addEventListener("click", () => { pr.session = null; pickPractice(); renderPractice(); });
     $("#prStart")?.addEventListener("click", () => { pr.phase = "answer"; pr.t0 = Date.now(); renderPractice(); });
     $("#prReveal")?.addEventListener("click", () => { pr.phase = "review"; pr.elapsed = Date.now() - pr.t0; renderPractice(); });
     $$("[data-ci]").forEach((c) => (c.onchange = () => { const i = Number(c.dataset.ci); c.checked ? pr.checks.add(i) : pr.checks.delete(i); }));
-    $$("[data-g]").forEach((b) => (b.onclick = () => { store.data.practice[pr.id] = { grade: b.dataset.g, at: Date.now(), covered: list.length ? pr.checks.size / list.length : 0 }; store.save(); pickPractice(); renderPractice(); }));
+    $$("[data-g]").forEach((b) => (b.onclick = () => {
+      const covered = list.length ? pr.checks.size / list.length : 0;
+      store.data.practice[pr.id] = { grade: b.dataset.g, at: Date.now(), covered }; store.save();
+      if (pr.session) recordSession(b.dataset.g, covered); else pickPractice();
+      renderPractice();
+    }));
     if (pr.phase === "answer") {
       const tick = () => { if (state.route.name !== "practice") return clearInterval(pr.timer); const left = pr.minutes * 60000 - (Date.now() - pr.t0); const el = $("#prClock"); if (el) { el.textContent = left > 0 ? fmt(left) : "time"; el.classList.toggle("over", left <= 0); } };
       tick(); pr.timer = setInterval(tick, 250);
