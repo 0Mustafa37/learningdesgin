@@ -1,1 +1,46 @@
-{"model": "gemini-3.1-flash-tts-preview", "voice": "Kore", "files": {}}
+{
+"files": {
+"napkin-math/0": {
+"f": "napkin-math/0.mp3",
+"h": "834bc7a0"
+},
+"napkin-math/1": {
+"f": "napkin-math/1.mp3",
+"h": "60db5ddb"
+},
+"napkin-math/2": {
+"f": "napkin-math/2.mp3",
+"h": "d5c91029"
+},
+"napkin-math/3": {
+"f": "napkin-math/3.mp3",
+"h": "e65aee16"
+},
+"stateless-services/0": {
+"f": "stateless-services/0.mp3",
+"h": "32eef9a9"
+},
+"stateless-services/1": {
+"f": "stateless-services/1.mp3",
+"h": "383babd2"
+},
+"vertical-vs-horizontal/0": {
+"f": "vertical-vs-horizontal/0.mp3",
+"h": "433d6322"
+},
+"vertical-vs-horizontal/1": {
+"f": "vertical-vs-horizontal/1.mp3",
+"h": "38225f0b"
+},
+"vertical-vs-horizontal/2": {
+"f": "vertical-vs-horizontal/2.mp3",
+"h": "303d0124"
+},
+"vertical-vs-horizontal/3": {
+"f": "vertical-vs-horizontal/3.mp3",
+"h": "e08c3f4b"
+}
+},
+"model": "gemini-3.1-flash-tts-preview",
+"voice": "Kore"
+}
