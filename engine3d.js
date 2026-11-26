@@ -334,13 +334,24 @@ const flushTrace = () => {
   if (html !== lastTrace) { logEl.innerHTML = html; lastTrace = html; }
 };
 
-/* ───────── metrics ───────── */
+/* ───────── metrics (numbers count from the previous step's value) ───────── */
+const NUM = /^([~≈<>≤]?\s*)(\d[\d,]*(?:\.\d+)?)(.*)$/;
+const countUp = (from, to, f) => {
+  const b = NUM.exec(String(to)); if (!b || f >= 1) return to;
+  const a = from != null ? NUM.exec(String(from)) : null;
+  const tv = parseFloat(b[2].replace(/,/g, "")), fv = a && a[3].trim() === b[3].trim() ? parseFloat(a[2].replace(/,/g, "")) : 0;
+  if (fv === tv) return to;
+  const dec = (b[2].split(".")[1] || "").length, v = fv + (tv - fv) * (1 - Math.pow(1 - f, 3));
+  const txt = dec ? v.toFixed(dec) : Math.round(v).toLocaleString("en-US");
+  return b[1] + (b[2].includes(",") || tv >= 10000 ? txt : txt.replace(/,/g, "")) + b[3];
+};
+let stepStart = 0, introAtStart = 0;
 const flushMetrics = () => {
   let items;
   if (storyMetrics && Object.keys(storyMetrics).length) items = Object.entries(storyMetrics).map(([k, [ic, v, tone]]) => [ic, k, v, tone]);
   else {
-    const prev = lesson.steps[stepIdx - 1];
-    items = (lesson.metricKeys || []).map((k) => { const v = step.metrics[k]; return [metricIcon(k), k, v ?? "—", v && (!prev || prev.metrics[k] !== v) ? "changed" : ""]; });
+    const prev = lesson.steps[stepIdx - 1], f = clamp01((performance.now() - stepStart - (introAtStart > 0 ? introAtStart : 0)) / 1400);
+    items = (lesson.metricKeys || []).map((k) => { const v = step.metrics[k]; return [metricIcon(k), k, v ? countUp(prev && prev.metrics[k], v, f) : "—", v && (!prev || prev.metrics[k] !== v) ? "changed" : ""]; });
   }
   const html = items.map(([ic, k, v, tone]) => `<div class="s3-metric ${tone || ""}" title="${esc(k)}: ${esc(v)}"><small>${svg(ic)}${esc(k)}</small><b>${esc(v)}</b></div>`).join("");
   if (html !== lastMetrics) { metricsEl.innerHTML = html; lastMetrics = html; }
@@ -353,6 +364,9 @@ const S = {
   pool(id, states) { poolState = { id, states }; },
   ring(id, frac, v) { ringState = frac > 0 ? { id, frac, v } : null; },
   gate(st) { gateState = st; },
+  /* how many of this step's events match, and how many have started by time t */
+  total(pred = () => true) { return events.filter(pred).length; },
+  done(pred = () => true, t = clock) { return events.filter((e) => pred(e) && e.at + e.dur <= t).length; },
 };
 
 /* ───────── loading lessons and steps ───────── */
@@ -367,7 +381,7 @@ const load = (l, idx) => {
   stepIdx = -1; setStep(idx, now, true);
 };
 const setStep = (idx, now = performance.now(), first = false) => {
-  stepIdx = idx; step = lesson.steps[idx]; clock = 0; intro = first ? 1500 : 450;
+  stepIdx = idx; step = lesson.steps[idx]; clock = 0; intro = first ? 1500 : 450; stepStart = now; introAtStart = intro;
   const show = new Set(step.show || lesson.nodes.map((n) => n.id));
   Object.values(nodes).forEach((o) => {
     const target = show.has(o.n.id) ? 1 : 0, delay = first ? o.idx * 160 : 0;
@@ -381,6 +395,7 @@ const setStep = (idx, now = performance.now(), first = false) => {
   want.forEach((w, n) => { if (!pipes.some((p) => p.key === w.key && !p.dead)) { const p = makePipe(w.key, w.f, w.t, w.k, w.off, now + base + n * 130); if (p) pipes.push(p); } });
   /* events */
   const gen = step.ev ? { list: step.ev, L: step.L || Math.max(...step.ev.map((e) => e.at + e.dur + (e.hold || 0))) + 900 } : genericEvents(step);
+  if (!step.ev && step.L) gen.L = step.L;
   events = gen.list; loopL = gen.L;
   clearPackets();
   packets = events.map((e) => {
