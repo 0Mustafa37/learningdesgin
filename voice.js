@@ -7,13 +7,10 @@
   let manifest = {}, arText = {};
   fetch("assets/voice/ar-text.json", { cache: "no-cache" }).then((r) => (r.ok ? r.json() : {})).then((m) => { arText = m; }).catch(() => {});
   const lang = () => (A.store.data.voiceLang === "ar" ? "ar" : "en");
-  /* Arabic narration: the full translation when it matches the current English text, else the Arabic key idea */
-  const arNarration = (id, idx, en) => {
-    const t = arText[`${id}/${idx}`];
-    if (t && t.src === hash(en)) return t.ar;
-    const k = (window.AR_KEYS || {})[id]?.[idx];
-    return k ? `الفكرة الأساسية: ${k}` : null;
-  };
+  /* Egyptian Arabic narration (generated with Gemini) when it matches the current English text */
+  const arNarration = (id, idx, en) => { const t = arText[`${id}/${idx}`]; return t && t.src === hash(en) ? t.ar : null; };
+  /* the browser's own Arabic voices are robotic, except the neural ones (Edge: "Microsoft Salma/Shakir Online (Natural)") */
+  const naturalArabic = () => synth && synth.getVoices().filter((v) => /^ar/i.test(v.lang) && /natural|online|neural/i.test(v.name)).sort((a, b) => /eg/i.test(b.lang) - /eg/i.test(a.lang))[0];
   fetch("assets/voice/manifest.json", { cache: "no-cache" }).then((r) => (r.ok ? r.json() : {})).then((m) => { manifest = m.files || {}; }).catch(() => {});
   const synth = window.speechSynthesis;
   const pickVoice = (lang) => {
@@ -39,6 +36,7 @@
     d.innerHTML = `<video controls autoplay playsinline preload="metadata" poster="assets/clips/${id}.jpg" src="assets/clips/${id}.mp4"></video><form method="dialog"><button class="btn">Close</button></form>`;
     d.addEventListener("close", () => d.remove()); document.body.appendChild(d); d.showModal();
   };
+  let warned = false;
   let cur = { id: null, idx: -1 }, mode = null, token = 0, audio = null, stepStart = 0;
   const $ = (s) => document.querySelector(s);
   const sentences = (t) => t.match(/[^.!?]+[.!?]+["”)]?\s*|[^.!?]+$/g)?.map((x) => x.trim()).filter(Boolean) || [t];
@@ -53,7 +51,7 @@
   const stopAll = () => { token++; synth?.cancel(); if (audio) { audio.pause(); audio = null; } caption(""); };
   const paintButtons = () => {
     const say = $("#vcSay"), watch = $("#vcWatch"), lg = $("#vcLang");
-    if (lg) { lg.textContent = lang() === "ar" ? "الصوت: عربي" : "Voice: English"; lg.dir = lang() === "ar" ? "rtl" : "ltr"; lg.setAttribute("aria-label", "Narration language"); }
+    if (lg) { lg.textContent = lang() === "ar" ? "الصوت: مصري" : "Voice: English"; lg.dir = lang() === "ar" ? "rtl" : "ltr"; lg.setAttribute("aria-label", "Narration language"); }
     if (say) { say.textContent = mode === "say" ? "■ Stop" : "🔊 Listen"; say.setAttribute("aria-pressed", mode === "say"); }
     if (watch) { watch.textContent = mode === "watch" ? "■ Stop video" : "▶ Play as video"; watch.setAttribute("aria-pressed", mode === "watch"); watch.classList.toggle("btn-primary", mode === "watch"); }
     document.body.classList.toggle("vc-watching", mode === "watch");
@@ -73,8 +71,12 @@
     browserSpeak(text, lang, my).then(done);
   });
   const browserSpeak = async (text, lang, my) => {
+    if (lang === "ar" && !naturalArabic()) { // no robot voice for Arabic: captions only
+      for (const p of sentences(text)) { if (my !== token) return; caption(p); await new Promise((r) => setTimeout(r, 70 * p.length + 600)); }
+      return;
+    }
     if (!synth) { for (const p of sentences(text)) { if (my !== token) return; caption(p); await new Promise((r) => setTimeout(r, 60 * p.length)); } return; }
-    const voice = pickVoice(lang);
+    const voice = lang === "ar" ? naturalArabic() : pickVoice(lang);
     for (const p of sentences(text)) {
       if (my !== token) return;
       caption(p);
@@ -92,7 +94,11 @@
     stepStart = performance.now();
     window.Stage3D?.replay();
     if (ar) await speak(ar, `${id}/${idx}/ar`, "ar", my);
-    else await speak(en, `${id}/${idx}`, "en", my);
+    else if (lang() === "ar") {
+      /* no Egyptian version of this step yet: say so once, then use English */
+      if (!warned) { warned = true; caption("الصوت المصري للخطوة دي لسه بيتجهز، هنسمعها بالإنجليزي دلوقتي."); await new Promise((r) => setTimeout(r, 2600)); }
+      if (my === token) await speak(en, `${id}/${idx}`, "en", my);
+    } else await speak(en, `${id}/${idx}`, "en", my);
     if (my !== token) return;
     if (mode === "watch") {
       const minShow = 6000 - (performance.now() - stepStart);

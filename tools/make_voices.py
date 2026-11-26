@@ -19,8 +19,11 @@ AR_TEXT = os.path.join(VOICE_DIR, "ar-text.json")  # Arabic narration, translate
 API = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 STYLE = {
     "en": "Read this aloud as a calm, clear engineering teacher, at a steady pace: ",
-    "ar": "Read this aloud in clear Modern Standard Arabic, as a calm teacher. Keep English technical terms in English: ",
+    "ar": ("Speak this in natural Egyptian Arabic with a Cairo accent, warm and relaxed, like an Egyptian senior engineer "
+           "explaining to a friend over coffee. Conversational rhythm and real intonation, never robotic or news-anchor style. "
+           "Pronounce the English technical terms the way Egyptian developers say them: "),
 }
+LANG_CODE = {"en": "en-US", "ar": "ar-EG"}
 
 
 def js_hash(s):
@@ -53,15 +56,39 @@ def narrations():
     return items
 
 
-TRANSLATE = """Translate each English narration below into clear Modern Standard Arabic that an Egyptian software engineer
-would enjoy listening to. Keep technical terms, product names, code, numbers and units in English (e.g. timeout, cache,
-PostgreSQL, p95, 2 s). Keep it natural for speech, the same length or shorter. Return only a JSON object mapping each id
-to its Arabic text.
+TRANSLATE = """You write narration for an Egyptian backend-engineering course. Rewrite each English narration below in
+Egyptian colloquial Arabic (عامية مصرية), the way a friendly Egyptian senior engineer explains things out loud to a colleague.
+Not Modern Standard Arabic, not a literal translation: natural spoken Egyptian.
+- Keep technical terms in English exactly as Egyptian developers say them (timeout, cache, retry, worker, database, query,
+  index, load balancer, queue, deploy, p95…), with "الـ" before them where natural (الـ cache, الـ timeout).
+- Keep numbers, units, code and product names as they are (2 s, 50 ms, PostgreSQL, Redis).
+- Short spoken sentences. Same meaning, same length or shorter. Start the key idea with "الفكرة الأساسية:".
+Example:
+EN: "Calls never return. Each one holds a worker thread, and within a minute every checkout worker is stuck."
+EG: "الطلبات مش بترجع خالص. كل طلب ماسك worker، وفي أقل من دقيقة كل الـ workers بتوع الـ checkout بيبقوا واقفين مستنيين."
+Return only a JSON object mapping each id to its Egyptian Arabic text.
 
 """
+TEXT_MODELS = ["gemini-3.5-flash", "gemini-3-flash-preview", "gemini-2.5-flash"]
 
 
 def translate(batch, key, model):
+    """Try the requested model, then fall back; retry busy (429/503) responses with backoff."""
+    last = None
+    for m in [model] + [x for x in TEXT_MODELS if x != model]:
+        for attempt in range(4):
+            try:
+                return _translate(batch, key, m)
+            except urllib.error.HTTPError as e:
+                last = e
+                if e.code in (429, 500, 503):
+                    time.sleep(10 * (attempt + 1))
+                    continue
+                break  # 404 (model not available) etc.: try the next model
+    raise last
+
+
+def _translate(batch, key, model):
     body = {"contents": [{"parts": [{"text": TRANSLATE + json.dumps(dict(batch), ensure_ascii=False)}]}],
             "generationConfig": {"responseMimeType": "application/json", "temperature": 0.2}}
     req = urllib.request.Request(API.format(model=model), data=json.dumps(body).encode(), headers={"Content-Type": "application/json", "x-goog-api-key": key})
@@ -74,7 +101,7 @@ def translate(batch, key, model):
 def tts(text, lang, key, model, voice):
     body = {
         "contents": [{"parts": [{"text": STYLE[lang] + text}]}],
-        "generationConfig": {"responseModalities": ["AUDIO"], "speechConfig": {"voiceConfig": {"prebuiltVoiceConfig": {"voiceName": voice}}}},
+        "generationConfig": {"responseModalities": ["AUDIO"], "speechConfig": {"languageCode": LANG_CODE[lang], "voiceConfig": {"prebuiltVoiceConfig": {"voiceName": voice}}}},
     }
     req = urllib.request.Request(API.format(model=model), data=json.dumps(body).encode(), headers={"Content-Type": "application/json", "x-goog-api-key": key})
     with urllib.request.urlopen(req, timeout=120) as r:
@@ -94,7 +121,8 @@ def main():
     ap.add_argument("--max", type=int, default=90, help="files to generate this run (free-tier quotas are small)")
     ap.add_argument("--rpm", type=float, default=8, help="requests per minute")
     ap.add_argument("--model", default=os.environ.get("TTS_MODEL", "gemini-3.1-flash-tts-preview"))
-    ap.add_argument("--voice", default=os.environ.get("TTS_VOICE", "Kore"))
+    ap.add_argument("--voice", default=os.environ.get("TTS_VOICE", "Kore"), help="English voice")
+    ap.add_argument("--ar-voice", default=os.environ.get("TTS_AR_VOICE", "Sulafat"), help="Egyptian Arabic voice")
     ap.add_argument("--only", default="", help="regex on keys, e.g. '^timeouts-retries/'")
     ap.add_argument("--lang", default="both", choices=["en", "ar", "both"], help="which narration to voice")
     ap.add_argument("--text-model", default=os.environ.get("TEXT_MODEL", "gemini-3.5-flash"), help="model used to translate to Arabic")
@@ -106,18 +134,16 @@ def main():
 
     man = json.load(open(MANIFEST)) if os.path.exists(MANIFEST) else {}
     files = man.setdefault("files", {})
-    if files and man.get("voice") not in (None, a.voice):
-        print(f"Voice changed from {man.get('voice')} to {a.voice}: regenerating everything.")
-        files.clear()
-    man.update({"model": a.model, "voice": a.voice})
+    man.update({"model": a.model, "voice": a.voice, "ar_voice": a.ar_voice})
+    voice_for = lambda lang: a.ar_voice if lang == "ar" else a.voice
     en = narrations()
     items = []
     if a.lang in ("ar", "both"):
         ar = json.load(open(AR_TEXT)) if os.path.exists(AR_TEXT) else {}
         need = [(k, t) for k, t in en if (not a.only or re.search(a.only, k)) and ar.get(k, {}).get("src") != js_hash(t)]
-        print(f"{len(need)} steps need an Arabic translation.")
-        for i in range(0, len(need), 12):
-            batch = need[i: i + 12]
+        print(f"{len(need)} steps need an Egyptian Arabic version.")
+        for i in range(0, len(need), 8):
+            batch = need[i: i + 8]
             try:
                 got = {k: f"[ar] {t[:40]}" for k, t in batch} if a.fake else translate(batch, key, a.text_model)
             except (urllib.error.HTTPError, urllib.error.URLError, KeyError, ValueError) as e:
@@ -128,15 +154,16 @@ def main():
                     ar[k] = {"src": js_hash(t), "ar": got[k]}
             json.dump(ar, open(AR_TEXT, "w"), ensure_ascii=False, indent=0, sort_keys=True)
             time.sleep(1 if a.fake else 4)
-    for k, t in en:
-        if a.lang in ("en", "both"):
-            items.append((k, t, "en"))
-        if a.lang in ("ar", "both") and ar.get(k, {}).get("src") == js_hash(t):
-            items.append((k + "/ar", ar[k]["ar"], "ar"))
+    # Egyptian Arabic first (it's the one people asked for), then English
+    if a.lang in ("ar", "both"):
+        items += [(k + "/ar", ar[k]["ar"], "ar") for k, t in en if ar.get(k, {}).get("src") == js_hash(t)]
+    if a.lang in ("en", "both"):
+        items += [(k, t, "en") for k, t in en]
     want = {k for k, _, _ in items}
     for k in [k for k in files if k not in want and (a.lang == "both" or k.endswith("/ar") == (a.lang == "ar"))]:  # steps that no longer exist
         files.pop(k)
-    todo = [(k, t, lang) for k, t, lang in items if (not a.only or re.search(a.only, k)) and not (k in files and files[k]["h"] == js_hash(t) and os.path.exists(os.path.join(VOICE_DIR, files[k]["f"])))]
+    fresh = lambda k, t, lang: k in files and files[k]["h"] == js_hash(t) and files[k].get("v", man.get("voice")) == voice_for(lang) and os.path.exists(os.path.join(VOICE_DIR, files[k]["f"]))
+    todo = [(k, t, lang) for k, t, lang in items if (not a.only or re.search(a.only, k)) and not fresh(k, t, lang)]
     print(f"{len(items)} narrations, {len(todo)} to generate, generating up to {a.max} now.")
     done, gap = 0, 60.0 / a.rpm
     for k, text, lang in todo[: a.max]:
@@ -147,7 +174,7 @@ def main():
                 if a.fake:
                     pcm, rate = b"\x00\x00" * 24000, 24000
                 else:
-                    pcm, rate = tts(text, lang, key, a.model, a.voice)
+                    pcm, rate = tts(text, lang, key, a.model, voice_for(lang))
                 break
             except urllib.error.HTTPError as e:
                 msg = e.read().decode(errors="replace")
@@ -170,7 +197,7 @@ def main():
         if attempt is None:
             break
         to_mp3(pcm, rate, os.path.join(VOICE_DIR, rel))
-        files[k] = {"f": rel, "h": js_hash(text)}
+        files[k] = {"f": rel, "h": js_hash(text), "v": voice_for(lang)}
         done += 1
         json.dump(man, open(MANIFEST, "w"), ensure_ascii=False, indent=0, sort_keys=True)
         print(f"✓ {k}")

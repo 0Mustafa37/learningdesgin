@@ -5,7 +5,8 @@ on:
   workflow_dispatch:
     inputs:
       max: { description: "Files to generate in this run", default: "90" }
-      voice: { description: "Gemini voice (e.g. Kore, Charon, Puck, Aoede)", default: "Kore" }
+      voice: { description: "English voice (e.g. Kore, Charon, Puck, Aoede)", default: "Kore" }
+      ar_voice: { description: "Egyptian Arabic voice (e.g. Sulafat, Charon, Achird, Algieba)", default: "Sulafat" }
       only: { description: "Only keys matching this regex (blank = all)", default: "" }
       lang: { description: "en, ar or both", default: "both" }
   schedule:
@@ -32,7 +33,7 @@ jobs:
         run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg && pip install playwright && python -m playwright install --with-deps chromium
       - name: Generate
         if: steps.key.outputs.skip != '1'
-        run: python tools/make_voices.py --max "${{ github.event.inputs.max || '90' }}" --voice "${{ github.event.inputs.voice || 'Kore' }}" --only "${{ github.event.inputs.only }}" --lang "${{ github.event.inputs.lang || 'both' }}"
+        run: python tools/make_voices.py --max "${{ github.event.inputs.max || '90' }}" --voice "${{ github.event.inputs.voice || 'Kore' }}" --ar-voice "${{ github.event.inputs.ar_voice || 'Sulafat' }}" --only "${{ github.event.inputs.only }}" --lang "${{ github.event.inputs.lang || 'both' }}"
       - name: Commit
         if: steps.key.outputs.skip != '1'
         run: |

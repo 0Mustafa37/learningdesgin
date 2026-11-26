@@ -24,7 +24,9 @@ python3 -m http.server 8000
 
 1. Create a key at [Google AI Studio](https://aistudio.google.com/apikey).
 2. In the repo: Settings → Secrets and variables → Actions → New repository secret, name `GEMINI_API_KEY`.
-3. Actions → **voices** → Run workflow (pick a voice such as Kore, Charon, Puck or Aoede).
+3. Actions → **voices** → Run workflow. English uses `voice` (Kore by default); the Arabic narration is rewritten in **Egyptian colloquial Arabic** and voiced with `ar_voice` (Sulafat by default) using the `ar-EG` accent. Try one lesson first with `only` = `^timeouts-retries/` and `lang` = `ar`.
+
+The free tier allows only about 10 voice files a day. Enabling billing on the AI Studio project lifts that (the whole course is a few hundred thousand characters, typically a dollar or two).
 
 `tools/make_voices.py` reads the narration text from the site, calls `gemini-3.1-flash-tts-preview`, saves MP3s in `assets/voice/` with a hash of the text, and commits them. It resumes where it stopped and runs daily, so free-tier quotas are fine. Edited steps are re-voiced automatically. After voices exist, re-run `tools/make_clips.py` to put narration into the clips.
 
