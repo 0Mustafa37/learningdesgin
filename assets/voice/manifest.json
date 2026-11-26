@@ -2,44 +2,2350 @@
 "ar_voice": "ar-EG-ShakirNeural",
 "engine": "edge",
 "files": {
+"anatomy-of-a-request/0": {
+"f": "anatomy-of-a-request/0.mp3",
+"h": "2b9f0e0f",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"anatomy-of-a-request/1": {
+"f": "anatomy-of-a-request/1.mp3",
+"h": "e50e0815",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"anatomy-of-a-request/2": {
+"f": "anatomy-of-a-request/2.mp3",
+"h": "cb2efb",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"anatomy-of-a-request/3": {
+"f": "anatomy-of-a-request/3.mp3",
+"h": "c98acd73",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"anatomy-of-a-request/4": {
+"f": "anatomy-of-a-request/4.mp3",
+"h": "6bf94152",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"anatomy-of-a-request/5": {
+"f": "anatomy-of-a-request/5.mp3",
+"h": "a2ad87ee",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"anatomy-of-a-request/6": {
+"f": "anatomy-of-a-request/6.mp3",
+"h": "1d044e8a",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"authentication/0": {
+"f": "authentication/0.mp3",
+"h": "16b1e5",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"authentication/0/ar": {
+"f": "authentication/0-ar.mp3",
+"h": "e561dc8",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"authentication/1": {
+"f": "authentication/1.mp3",
+"h": "f410813e",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"authentication/1/ar": {
+"f": "authentication/1-ar.mp3",
+"h": "724ff6c7",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"authentication/2": {
+"f": "authentication/2.mp3",
+"h": "2bb40e70",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"authentication/2/ar": {
+"f": "authentication/2-ar.mp3",
+"h": "1b9d27ef",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"authentication/3": {
+"f": "authentication/3.mp3",
+"h": "45333f10",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"authentication/3/ar": {
+"f": "authentication/3-ar.mp3",
+"h": "8c9c8ea2",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"authorization/0": {
+"f": "authorization/0.mp3",
+"h": "aa8320fb",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"authorization/0/ar": {
+"f": "authorization/0-ar.mp3",
+"h": "8f3c5802",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"authorization/1": {
+"f": "authorization/1.mp3",
+"h": "e168eaa5",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"authorization/1/ar": {
+"f": "authorization/1-ar.mp3",
+"h": "4b1236ba",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"authorization/2": {
+"f": "authorization/2.mp3",
+"h": "b5ceb120",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"authorization/2/ar": {
+"f": "authorization/2-ar.mp3",
+"h": "5772f09c",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"authorization/3": {
+"f": "authorization/3.mp3",
+"h": "7afe7ff4",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"authorization/3/ar": {
+"f": "authorization/3-ar.mp3",
+"h": "56a681c3",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"backpressure/0": {
+"f": "backpressure/0.mp3",
+"h": "e8fc7cff",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"backpressure/1": {
+"f": "backpressure/1.mp3",
+"h": "27e3cdd6",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"backpressure/2": {
+"f": "backpressure/2.mp3",
+"h": "f396bd51",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"backpressure/3": {
+"f": "backpressure/3.mp3",
+"h": "dd44082f",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"batch-stream/0": {
+"f": "batch-stream/0.mp3",
+"h": "43f4c15a",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"batch-stream/0/ar": {
+"f": "batch-stream/0-ar.mp3",
+"h": "9a56ed7f",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"batch-stream/1": {
+"f": "batch-stream/1.mp3",
+"h": "faf7881a",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"batch-stream/1/ar": {
+"f": "batch-stream/1-ar.mp3",
+"h": "f79346f4",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"batch-stream/2": {
+"f": "batch-stream/2.mp3",
+"h": "7e538162",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"batch-stream/2/ar": {
+"f": "batch-stream/2-ar.mp3",
+"h": "b454773",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"batch-stream/3": {
+"f": "batch-stream/3.mp3",
+"h": "50c60ecd",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"batch-stream/3/ar": {
+"f": "batch-stream/3-ar.mp3",
+"h": "bbd55ee6",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"build-vs-buy/0": {
+"f": "build-vs-buy/0.mp3",
+"h": "f153fa7d",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"build-vs-buy/1": {
+"f": "build-vs-buy/1.mp3",
+"h": "5955f6dd",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"build-vs-buy/2": {
+"f": "build-vs-buy/2.mp3",
+"h": "cd454629",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"build-vs-buy/3": {
+"f": "build-vs-buy/3.mp3",
+"h": "fd6b98bc",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"caching/0": {
+"f": "caching/0.mp3",
+"h": "8e3dcf55",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"caching/1": {
+"f": "caching/1.mp3",
+"h": "436c5e7d",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"caching/2": {
+"f": "caching/2.mp3",
+"h": "9ceaaa3a",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"caching/3": {
+"f": "caching/3.mp3",
+"h": "c630eb54",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"caching/4": {
+"f": "caching/4.mp3",
+"h": "c83e03c8",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"cap-consistency/0": {
+"f": "cap-consistency/0.mp3",
+"h": "e44dbb0a",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"cap-consistency/0/ar": {
+"f": "cap-consistency/0-ar.mp3",
+"h": "5c7208c5",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"cap-consistency/1": {
+"f": "cap-consistency/1.mp3",
+"h": "9a408434",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"cap-consistency/1/ar": {
+"f": "cap-consistency/1-ar.mp3",
+"h": "9d0495b",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"cap-consistency/2": {
+"f": "cap-consistency/2.mp3",
+"h": "f1b3c7cc",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"cap-consistency/2/ar": {
+"f": "cap-consistency/2-ar.mp3",
+"h": "8884ef58",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"cap-consistency/3": {
+"f": "cap-consistency/3.mp3",
+"h": "4ec5cdbb",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"cap-consistency/3/ar": {
+"f": "cap-consistency/3-ar.mp3",
+"h": "abd48a80",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"cdc/0": {
+"f": "cdc/0.mp3",
+"h": "727e2dcd",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"cdc/0/ar": {
+"f": "cdc/0-ar.mp3",
+"h": "8184c2d2",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"cdc/1": {
+"f": "cdc/1.mp3",
+"h": "7a6b6bb4",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"cdc/1/ar": {
+"f": "cdc/1-ar.mp3",
+"h": "deb0b00b",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"cdc/2": {
+"f": "cdc/2.mp3",
+"h": "3714ad8f",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"cdc/2/ar": {
+"f": "cdc/2-ar.mp3",
+"h": "63e61ab6",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"cdc/3": {
+"f": "cdc/3.mp3",
+"h": "1c84ec94",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"cdc/3/ar": {
+"f": "cdc/3-ar.mp3",
+"h": "16af9153",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"cell-architecture/0": {
+"f": "cell-architecture/0.mp3",
+"h": "b6ce284e",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"cell-architecture/1": {
+"f": "cell-architecture/1.mp3",
+"h": "a27b6f89",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"cell-architecture/2": {
+"f": "cell-architecture/2.mp3",
+"h": "7ccc4992",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"cell-architecture/3": {
+"f": "cell-architecture/3.mp3",
+"h": "e6d41070",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"chat-system/0": {
+"f": "chat-system/0.mp3",
+"h": "2c77f006",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"chat-system/0/ar": {
+"f": "chat-system/0-ar.mp3",
+"h": "ed32bcc5",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"chat-system/1": {
+"f": "chat-system/1.mp3",
+"h": "6bdae1c2",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"chat-system/1/ar": {
+"f": "chat-system/1-ar.mp3",
+"h": "ca0cbbc7",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"chat-system/2": {
+"f": "chat-system/2.mp3",
+"h": "e3939d60",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"chat-system/2/ar": {
+"f": "chat-system/2-ar.mp3",
+"h": "434016e1",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"chat-system/3": {
+"f": "chat-system/3.mp3",
+"h": "d4f60a",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"chat-system/3/ar": {
+"f": "chat-system/3-ar.mp3",
+"h": "7d7364e7",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"ci-cd/0": {
+"f": "ci-cd/0.mp3",
+"h": "27732484",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"ci-cd/0/ar": {
+"f": "ci-cd/0-ar.mp3",
+"h": "d52994cf",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"ci-cd/1": {
+"f": "ci-cd/1.mp3",
+"h": "fa47a1c4",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"ci-cd/1/ar": {
+"f": "ci-cd/1-ar.mp3",
+"h": "3b0b1278",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"ci-cd/2": {
+"f": "ci-cd/2.mp3",
+"h": "20db9156",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"ci-cd/2/ar": {
+"f": "ci-cd/2-ar.mp3",
+"h": "50ee7b5a",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"ci-cd/3": {
+"f": "ci-cd/3.mp3",
+"h": "8b7fbdff",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"ci-cd/3/ar": {
+"f": "ci-cd/3-ar.mp3",
+"h": "8c5a0d17",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"cloud-costs/0": {
+"f": "cloud-costs/0.mp3",
+"h": "18526dc5",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"cloud-costs/1": {
+"f": "cloud-costs/1.mp3",
+"h": "3e53d4f5",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"cloud-costs/2": {
+"f": "cloud-costs/2.mp3",
+"h": "84aca498",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"cloud-costs/3": {
+"f": "cloud-costs/3.mp3",
+"h": "65290c3e",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"consensus-leaders/0": {
+"f": "consensus-leaders/0.mp3",
+"h": "b78f1bb4",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"consensus-leaders/0/ar": {
+"f": "consensus-leaders/0-ar.mp3",
+"h": "c00307b1",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"consensus-leaders/1": {
+"f": "consensus-leaders/1.mp3",
+"h": "33c2d175",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"consensus-leaders/1/ar": {
+"f": "consensus-leaders/1-ar.mp3",
+"h": "64829465",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"consensus-leaders/2": {
+"f": "consensus-leaders/2.mp3",
+"h": "24e8414f",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"consensus-leaders/2/ar": {
+"f": "consensus-leaders/2-ar.mp3",
+"h": "feed2532",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"consensus-leaders/3": {
+"f": "consensus-leaders/3.mp3",
+"h": "211a1859",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"consensus-leaders/3/ar": {
+"f": "consensus-leaders/3-ar.mp3",
+"h": "5d46c5f8",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"consistent-hashing/0": {
+"f": "consistent-hashing/0.mp3",
+"h": "dc70f420",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"consistent-hashing/0/ar": {
+"f": "consistent-hashing/0-ar.mp3",
+"h": "46c4a7e2",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"consistent-hashing/1": {
+"f": "consistent-hashing/1.mp3",
+"h": "9fcb329c",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"consistent-hashing/1/ar": {
+"f": "consistent-hashing/1-ar.mp3",
+"h": "60f1a631",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"consistent-hashing/2": {
+"f": "consistent-hashing/2.mp3",
+"h": "a608d14a",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"consistent-hashing/2/ar": {
+"f": "consistent-hashing/2-ar.mp3",
+"h": "c29f467f",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"consistent-hashing/3": {
+"f": "consistent-hashing/3.mp3",
+"h": "797be58b",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"consistent-hashing/3/ar": {
+"f": "consistent-hashing/3-ar.mp3",
+"h": "27a5c194",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"content-delivery/0": {
+"f": "content-delivery/0.mp3",
+"h": "a9e9c203",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"content-delivery/0/ar": {
+"f": "content-delivery/0-ar.mp3",
+"h": "bd7dbb26",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"content-delivery/1": {
+"f": "content-delivery/1.mp3",
+"h": "137175d9",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"content-delivery/1/ar": {
+"f": "content-delivery/1-ar.mp3",
+"h": "bf6a5c83",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"content-delivery/2": {
+"f": "content-delivery/2.mp3",
+"h": "66579b6d",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"content-delivery/2/ar": {
+"f": "content-delivery/2-ar.mp3",
+"h": "cbf58015",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"content-delivery/3": {
+"f": "content-delivery/3.mp3",
+"h": "c87b9d09",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"content-delivery/3/ar": {
+"f": "content-delivery/3-ar.mp3",
+"h": "57aa0de3",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"conways-law/0": {
+"f": "conways-law/0.mp3",
+"h": "37b73e28",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"conways-law/1": {
+"f": "conways-law/1.mp3",
+"h": "9243988b",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"conways-law/2": {
+"f": "conways-law/2.mp3",
+"h": "a79cb670",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"conways-law/3": {
+"f": "conways-law/3.mp3",
+"h": "df6719c4",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"disaster-recovery/0": {
+"f": "disaster-recovery/0.mp3",
+"h": "7f93e39b",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"disaster-recovery/1": {
+"f": "disaster-recovery/1.mp3",
+"h": "66536484",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"disaster-recovery/2": {
+"f": "disaster-recovery/2.mp3",
+"h": "6b9251e6",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"disaster-recovery/3": {
+"f": "disaster-recovery/3.mp3",
+"h": "f649f364",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"distributed-locks/0": {
+"f": "distributed-locks/0.mp3",
+"h": "efd393d9",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"distributed-locks/0/ar": {
+"f": "distributed-locks/0-ar.mp3",
+"h": "a12e49f1",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"distributed-locks/1": {
+"f": "distributed-locks/1.mp3",
+"h": "1e19888e",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"distributed-locks/1/ar": {
+"f": "distributed-locks/1-ar.mp3",
+"h": "9b0fa986",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"distributed-locks/2": {
+"f": "distributed-locks/2.mp3",
+"h": "764be983",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"distributed-locks/2/ar": {
+"f": "distributed-locks/2-ar.mp3",
+"h": "ae2eead3",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"distributed-locks/3": {
+"f": "distributed-locks/3.mp3",
+"h": "b281c006",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"distributed-locks/3/ar": {
+"f": "distributed-locks/3-ar.mp3",
+"h": "1d918207",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"dj-atomic/0": {
+"f": "dj-atomic/0.mp3",
+"h": "5fd03979",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"dj-atomic/1": {
+"f": "dj-atomic/1.mp3",
+"h": "7731d495",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"dj-atomic/2": {
+"f": "dj-atomic/2.mp3",
+"h": "5ec2fcf8",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"dj-bulk-ops/0": {
+"f": "dj-bulk-ops/0.mp3",
+"h": "4098d6e",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"dj-bulk-ops/1": {
+"f": "dj-bulk-ops/1.mp3",
+"h": "51c55f53",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"dj-bulk-ops/2": {
+"f": "dj-bulk-ops/2.mp3",
+"h": "85ea06cd",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"dj-caching-django/0": {
+"f": "dj-caching-django/0.mp3",
+"h": "b3eed272",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"dj-caching-django/1": {
+"f": "dj-caching-django/1.mp3",
+"h": "fbc088f2",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"dj-caching-django/2": {
+"f": "dj-caching-django/2.mp3",
+"h": "17a46b22",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"dj-conn-pooling/0": {
+"f": "dj-conn-pooling/0.mp3",
+"h": "4b26e35e",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"dj-conn-pooling/0/ar": {
+"f": "dj-conn-pooling/0-ar.mp3",
+"h": "aed9e6bd",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"dj-conn-pooling/1": {
+"f": "dj-conn-pooling/1.mp3",
+"h": "3d93be2d",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"dj-conn-pooling/1/ar": {
+"f": "dj-conn-pooling/1-ar.mp3",
+"h": "f5c0b0fe",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"dj-conn-pooling/2": {
+"f": "dj-conn-pooling/2.mp3",
+"h": "420565dd",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"dj-conn-pooling/2/ar": {
+"f": "dj-conn-pooling/2-ar.mp3",
+"h": "d8eb456f",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"dj-db-constraints/0": {
+"f": "dj-db-constraints/0.mp3",
+"h": "7a09c792",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"dj-f-expressions/0": {
+"f": "dj-f-expressions/0.mp3",
+"h": "d0d19d21",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"dj-f-expressions/1": {
+"f": "dj-f-expressions/1.mp3",
+"h": "48c330c",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"dj-f-expressions/2": {
+"f": "dj-f-expressions/2.mp3",
+"h": "46fd5ec",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"dj-indexes/0": {
+"f": "dj-indexes/0.mp3",
+"h": "df951a7f",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"dj-indexes/0/ar": {
+"f": "dj-indexes/0-ar.mp3",
+"h": "a599141",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"dj-indexes/1": {
+"f": "dj-indexes/1.mp3",
+"h": "75e3002a",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"dj-indexes/1/ar": {
+"f": "dj-indexes/1-ar.mp3",
+"h": "5f7cfd1f",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"dj-indexes/2": {
+"f": "dj-indexes/2.mp3",
+"h": "ebd74f2a",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"dj-indexes/2/ar": {
+"f": "dj-indexes/2-ar.mp3",
+"h": "555621ca",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"dj-n-plus-one/0": {
+"f": "dj-n-plus-one/0.mp3",
+"h": "58216954",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"dj-n-plus-one/1": {
+"f": "dj-n-plus-one/1.mp3",
+"h": "5af31a39",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"dj-n-plus-one/2": {
+"f": "dj-n-plus-one/2.mp3",
+"h": "fc7048b9",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"dj-on-commit/0": {
+"f": "dj-on-commit/0.mp3",
+"h": "9e20c76d",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"dj-on-commit/1": {
+"f": "dj-on-commit/1.mp3",
+"h": "d2678cc1",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"dj-on-commit/2": {
+"f": "dj-on-commit/2.mp3",
+"h": "8ec40941",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"dj-prefetch-object/0": {
+"f": "dj-prefetch-object/0.mp3",
+"h": "c92bd81d",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"dj-prefetch-object/2": {
+"f": "dj-prefetch-object/2.mp3",
+"h": "462a8b46",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"dj-queryset-laziness/0": {
+"f": "dj-queryset-laziness/0.mp3",
+"h": "3ce13055",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"dj-queryset-laziness/1": {
+"f": "dj-queryset-laziness/1.mp3",
+"h": "8eb983e1",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"dj-queryset-laziness/2": {
+"f": "dj-queryset-laziness/2.mp3",
+"h": "57f0e996",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"dj-select-for-update/0": {
+"f": "dj-select-for-update/0.mp3",
+"h": "d3bb8c3b",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"dj-select-for-update/1": {
+"f": "dj-select-for-update/1.mp3",
+"h": "478d58ff",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"dj-select-for-update/2": {
+"f": "dj-select-for-update/2.mp3",
+"h": "23d99fff",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"dj-slow-endpoint/0": {
+"f": "dj-slow-endpoint/0.mp3",
+"h": "f753ac29",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"dj-slow-endpoint/1": {
+"f": "dj-slow-endpoint/1.mp3",
+"h": "814707c0",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"dj-slow-endpoint/2": {
+"f": "dj-slow-endpoint/2.mp3",
+"h": "94d93091",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"dj-subquery-exists/0": {
+"f": "dj-subquery-exists/0.mp3",
+"h": "f39faef7",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"dj-subquery-exists/0/ar": {
+"f": "dj-subquery-exists/0-ar.mp3",
+"h": "a311257a",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"dj-subquery-exists/1": {
+"f": "dj-subquery-exists/1.mp3",
+"h": "3d273c0b",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"dj-subquery-exists/1/ar": {
+"f": "dj-subquery-exists/1-ar.mp3",
+"h": "661be44c",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"dj-subquery-exists/2": {
+"f": "dj-subquery-exists/2.mp3",
+"h": "15e1780d",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"dj-subquery-exists/2/ar": {
+"f": "dj-subquery-exists/2-ar.mp3",
+"h": "3d7cee4e",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"dual-write/0": {
+"f": "dual-write/0.mp3",
+"h": "e100f881",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"dual-write/0/ar": {
+"f": "dual-write/0-ar.mp3",
+"h": "d74c3b74",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"dual-write/1": {
+"f": "dual-write/1.mp3",
+"h": "aa75e641",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"dual-write/1/ar": {
+"f": "dual-write/1-ar.mp3",
+"h": "d71e59b2",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"dual-write/2": {
+"f": "dual-write/2.mp3",
+"h": "4a8ad8e6",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"dual-write/2/ar": {
+"f": "dual-write/2-ar.mp3",
+"h": "e5d915a9",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"dual-write/3": {
+"f": "dual-write/3.mp3",
+"h": "510d30de",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"dual-write/3/ar": {
+"f": "dual-write/3-ar.mp3",
+"h": "d721c691",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"duplicate-requests/0": {
+"f": "duplicate-requests/0.mp3",
+"h": "50cdc88d",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"duplicate-requests/1": {
+"f": "duplicate-requests/1.mp3",
+"h": "65399d7f",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"duplicate-requests/2": {
+"f": "duplicate-requests/2.mp3",
+"h": "47da8938",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"duplicate-requests/3": {
+"f": "duplicate-requests/3.mp3",
+"h": "bbcb7739",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"encryption-secrets/0": {
+"f": "encryption-secrets/0.mp3",
+"h": "6f2b5dc6",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"encryption-secrets/1": {
+"f": "encryption-secrets/1.mp3",
+"h": "b2bfad8",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"encryption-secrets/2": {
+"f": "encryption-secrets/2.mp3",
+"h": "5766b52a",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"encryption-secrets/2/ar": {
+"f": "encryption-secrets/2-ar.mp3",
+"h": "8c46d4de",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"encryption-secrets/3": {
+"f": "encryption-secrets/3.mp3",
+"h": "6e441486",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"encryption-secrets/3/ar": {
+"f": "encryption-secrets/3-ar.mp3",
+"h": "f0bf0d8d",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"error-budgets/0": {
+"f": "error-budgets/0.mp3",
+"h": "12488cc4",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"error-budgets/1": {
+"f": "error-budgets/1.mp3",
+"h": "a375a407",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"error-budgets/2": {
+"f": "error-budgets/2.mp3",
+"h": "63f0e36f",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"error-budgets/3": {
+"f": "error-budgets/3.mp3",
+"h": "d41527e1",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"event-sourcing/0": {
+"f": "event-sourcing/0.mp3",
+"h": "6adc0b4a",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"event-sourcing/0/ar": {
+"f": "event-sourcing/0-ar.mp3",
+"h": "a5e249f0",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"event-sourcing/1": {
+"f": "event-sourcing/1.mp3",
+"h": "c1e7ca8f",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"event-sourcing/1/ar": {
+"f": "event-sourcing/1-ar.mp3",
+"h": "84b36e15",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"event-sourcing/2": {
+"f": "event-sourcing/2.mp3",
+"h": "58c92edc",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"event-sourcing/2/ar": {
+"f": "event-sourcing/2-ar.mp3",
+"h": "d4f1bc74",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"event-sourcing/3": {
+"f": "event-sourcing/3.mp3",
+"h": "ff8cc0b8",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"event-sourcing/3/ar": {
+"f": "event-sourcing/3-ar.mp3",
+"h": "ba1271e",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"exactly-once/0": {
+"f": "exactly-once/0.mp3",
+"h": "19f0c7e",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"exactly-once/0/ar": {
+"f": "exactly-once/0-ar.mp3",
+"h": "8e94cdad",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"exactly-once/1": {
+"f": "exactly-once/1.mp3",
+"h": "cfcceeed",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"exactly-once/1/ar": {
+"f": "exactly-once/1-ar.mp3",
+"h": "9ac12906",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"exactly-once/2": {
+"f": "exactly-once/2.mp3",
+"h": "2df760d1",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"exactly-once/2/ar": {
+"f": "exactly-once/2-ar.mp3",
+"h": "cc321526",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"exactly-once/3": {
+"f": "exactly-once/3.mp3",
+"h": "2d7bc4b4",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"exactly-once/3/ar": {
+"f": "exactly-once/3-ar.mp3",
+"h": "7801c019",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"field-service-design/0": {
+"f": "field-service-design/0.mp3",
+"h": "57cf8418",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"field-service-design/1": {
+"f": "field-service-design/1.mp3",
+"h": "a251214e",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"field-service-design/2": {
+"f": "field-service-design/2.mp3",
+"h": "171f2fda",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"field-service-design/3": {
+"f": "field-service-design/3.mp3",
+"h": "eff777c6",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"files-media/0": {
+"f": "files-media/0.mp3",
+"h": "fbee93bd",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"files-media/0/ar": {
+"f": "files-media/0-ar.mp3",
+"h": "ef6af227",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"files-media/1": {
+"f": "files-media/1.mp3",
+"h": "d3e48ec1",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"files-media/1/ar": {
+"f": "files-media/1-ar.mp3",
+"h": "cc9f4f67",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"files-media/2": {
+"f": "files-media/2.mp3",
+"h": "7f555a2b",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"files-media/2/ar": {
+"f": "files-media/2-ar.mp3",
+"h": "45bbba56",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"files-media/3": {
+"f": "files-media/3.mp3",
+"h": "55aa68ed",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"files-media/3/ar": {
+"f": "files-media/3-ar.mp3",
+"h": "557df2b",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"hld-lld/0": {
+"f": "hld-lld/0.mp3",
+"h": "49756adc",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"hld-lld/0/ar": {
+"f": "hld-lld/0-ar.mp3",
+"h": "2c12cf0b",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"hld-lld/1": {
+"f": "hld-lld/1.mp3",
+"h": "a8007a65",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"hld-lld/1/ar": {
+"f": "hld-lld/1-ar.mp3",
+"h": "ceb35ce2",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"hld-lld/2": {
+"f": "hld-lld/2.mp3",
+"h": "eb7e46b9",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"hld-lld/3": {
+"f": "hld-lld/3.mp3",
+"h": "bdc9a110",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"hld-lld/3/ar": {
+"f": "hld-lld/3-ar.mp3",
+"h": "e76ae164",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"hot-partition/0": {
+"f": "hot-partition/0.mp3",
+"h": "883983d2",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"hot-partition/1": {
+"f": "hot-partition/1.mp3",
+"h": "6edb2b13",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"hot-partition/2": {
+"f": "hot-partition/2.mp3",
+"h": "fa1a892a",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"hot-partition/3": {
+"f": "hot-partition/3.mp3",
+"h": "5d7fdbb",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"incident-response/0": {
+"f": "incident-response/0.mp3",
+"h": "1102bbf8",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"incident-response/1": {
+"f": "incident-response/1.mp3",
+"h": "20b35601",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"incident-response/2": {
+"f": "incident-response/2.mp3",
+"h": "ef41952a",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"incident-response/3": {
+"f": "incident-response/3.mp3",
+"h": "57ebb0e7",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"indexes/0": {
+"f": "indexes/0.mp3",
+"h": "5189d587",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"indexes/0/ar": {
+"f": "indexes/0-ar.mp3",
+"h": "c7522cbe",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"indexes/1": {
+"f": "indexes/1.mp3",
+"h": "f1715a71",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"indexes/1/ar": {
+"f": "indexes/1-ar.mp3",
+"h": "f04989aa",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"indexes/2": {
+"f": "indexes/2.mp3",
+"h": "dc93d037",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"indexes/2/ar": {
+"f": "indexes/2-ar.mp3",
+"h": "db591990",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"indexes/3": {
+"f": "indexes/3.mp3",
+"h": "a6252a2a",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"indexes/3/ar": {
+"f": "indexes/3-ar.mp3",
+"h": "53402055",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"latency-and-throughput/0": {
+"f": "latency-and-throughput/0.mp3",
+"h": "f8b0d9c7",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"latency-and-throughput/1": {
+"f": "latency-and-throughput/1.mp3",
+"h": "e1f2cab7",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"latency-and-throughput/2": {
+"f": "latency-and-throughput/2.mp3",
+"h": "d648a8a8",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"latency-and-throughput/3": {
+"f": "latency-and-throughput/3.mp3",
+"h": "afffe7db",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"latency-and-throughput/4": {
+"f": "latency-and-throughput/4.mp3",
+"h": "52fd2f08",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"live-tracking-design/0": {
+"f": "live-tracking-design/0.mp3",
+"h": "7a18c8a1",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"live-tracking-design/0/ar": {
+"f": "live-tracking-design/0-ar.mp3",
+"h": "124180e8",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"live-tracking-design/1": {
+"f": "live-tracking-design/1.mp3",
+"h": "459ab223",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"live-tracking-design/1/ar": {
+"f": "live-tracking-design/1-ar.mp3",
+"h": "2cfcd8d5",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"live-tracking-design/2": {
+"f": "live-tracking-design/2.mp3",
+"h": "1ff3abb1",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"live-tracking-design/2/ar": {
+"f": "live-tracking-design/2-ar.mp3",
+"h": "29d555d4",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"live-tracking-design/3": {
+"f": "live-tracking-design/3.mp3",
+"h": "815002b6",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"live-tracking-design/3/ar": {
+"f": "live-tracking-design/3-ar.mp3",
+"h": "e7b5523b",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"load-balancing/0": {
+"f": "load-balancing/0.mp3",
+"h": "322e0ac8",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"load-balancing/1": {
+"f": "load-balancing/1.mp3",
+"h": "85d42e08",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"load-balancing/2": {
+"f": "load-balancing/2.mp3",
+"h": "3249e5ed",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"load-balancing/3": {
+"f": "load-balancing/3.mp3",
+"h": "7c6d5dc5",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"load-balancing/4": {
+"f": "load-balancing/4.mp3",
+"h": "3ccdaace",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"lost-update/0": {
+"f": "lost-update/0.mp3",
+"h": "181d9160",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"lost-update/1": {
+"f": "lost-update/1.mp3",
+"h": "1e7d5f09",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"lost-update/2": {
+"f": "lost-update/2.mp3",
+"h": "7d82e646",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"lost-update/3": {
+"f": "lost-update/3.mp3",
+"h": "cdea5ad4",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"message-queues/0": {
+"f": "message-queues/0.mp3",
+"h": "5c8a7835",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"message-queues/0/ar": {
+"f": "message-queues/0-ar.mp3",
+"h": "38e5ee05",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"message-queues/1": {
+"f": "message-queues/1.mp3",
+"h": "246078fd",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"message-queues/1/ar": {
+"f": "message-queues/1-ar.mp3",
+"h": "78069785",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"message-queues/2": {
+"f": "message-queues/2.mp3",
+"h": "138de054",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"message-queues/2/ar": {
+"f": "message-queues/2-ar.mp3",
+"h": "2f30604b",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"message-queues/3": {
+"f": "message-queues/3.mp3",
+"h": "ff5de476",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"message-queues/3/ar": {
+"f": "message-queues/3-ar.mp3",
+"h": "64999a8a",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"monolith-microservices/0": {
+"f": "monolith-microservices/0.mp3",
+"h": "6099bd9",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"monolith-microservices/0/ar": {
+"f": "monolith-microservices/0-ar.mp3",
+"h": "8168ab68",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"monolith-microservices/1": {
+"f": "monolith-microservices/1.mp3",
+"h": "f4f71d9c",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"monolith-microservices/1/ar": {
+"f": "monolith-microservices/1-ar.mp3",
+"h": "f97016d8",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"monolith-microservices/2": {
+"f": "monolith-microservices/2.mp3",
+"h": "81525b80",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"monolith-microservices/2/ar": {
+"f": "monolith-microservices/2-ar.mp3",
+"h": "c799ed6a",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"monolith-microservices/3": {
+"f": "monolith-microservices/3.mp3",
+"h": "5fff748",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"monolith-microservices/3/ar": {
+"f": "monolith-microservices/3-ar.mp3",
+"h": "ad688ca9",
+"v": "edge:ar-EG-ShakirNeural"
+},
 "napkin-math/0": {
 "f": "napkin-math/0.mp3",
-"h": "834bc7a0"
+"h": "f4bcf180",
+"v": "edge:en-US-AndrewMultilingualNeural"
 },
 "napkin-math/0/ar": {
 "f": "napkin-math/0-ar.mp3",
 "h": "2becf930",
-"v": "Sulafat"
+"v": "edge:ar-EG-ShakirNeural"
 },
 "napkin-math/1": {
 "f": "napkin-math/1.mp3",
-"h": "60db5ddb"
+"h": "6e91078c",
+"v": "edge:en-US-AndrewMultilingualNeural"
 },
 "napkin-math/1/ar": {
 "f": "napkin-math/1-ar.mp3",
 "h": "49e4b243",
-"v": "Sulafat"
+"v": "edge:ar-EG-ShakirNeural"
 },
 "napkin-math/2": {
 "f": "napkin-math/2.mp3",
-"h": "d5c91029"
+"h": "71f81355",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"napkin-math/2/ar": {
+"f": "napkin-math/2-ar.mp3",
+"h": "77a4d1f7",
+"v": "edge:ar-EG-ShakirNeural"
 },
 "napkin-math/3": {
 "f": "napkin-math/3.mp3",
-"h": "e65aee16"
+"h": "902c71bc",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"napkin-math/3/ar": {
+"f": "napkin-math/3-ar.mp3",
+"h": "8c4cbc0a",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"news-feed/0": {
+"f": "news-feed/0.mp3",
+"h": "eb4c3da",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"news-feed/0/ar": {
+"f": "news-feed/0-ar.mp3",
+"h": "926bb0b9",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"news-feed/1": {
+"f": "news-feed/1.mp3",
+"h": "6af843df",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"news-feed/1/ar": {
+"f": "news-feed/1-ar.mp3",
+"h": "9e4d3d78",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"news-feed/2": {
+"f": "news-feed/2.mp3",
+"h": "e1be91e",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"news-feed/2/ar": {
+"f": "news-feed/2-ar.mp3",
+"h": "517c4df",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"news-feed/3": {
+"f": "news-feed/3.mp3",
+"h": "e5a3fb9f",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"news-feed/3/ar": {
+"f": "news-feed/3-ar.mp3",
+"h": "70dfd5db",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"noisy-neighbour/0": {
+"f": "noisy-neighbour/0.mp3",
+"h": "34eb079f",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"noisy-neighbour/1": {
+"f": "noisy-neighbour/1.mp3",
+"h": "30e8ae48",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"noisy-neighbour/2": {
+"f": "noisy-neighbour/2.mp3",
+"h": "1412e431",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"noisy-neighbour/3": {
+"f": "noisy-neighbour/3.mp3",
+"h": "12f54c99",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"observability/0": {
+"f": "observability/0.mp3",
+"h": "9286ce53",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"observability/0/ar": {
+"f": "observability/0-ar.mp3",
+"h": "879ff494",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"observability/1": {
+"f": "observability/1.mp3",
+"h": "f0e7c46e",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"observability/1/ar": {
+"f": "observability/1-ar.mp3",
+"h": "5c95578e",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"observability/2": {
+"f": "observability/2.mp3",
+"h": "990c0e04",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"observability/2/ar": {
+"f": "observability/2-ar.mp3",
+"h": "e50bc57",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"observability/3": {
+"f": "observability/3.mp3",
+"h": "8b769801",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"observability/3/ar": {
+"f": "observability/3-ar.mp3",
+"h": "223e9b88",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"ordering-clocks/0": {
+"f": "ordering-clocks/0.mp3",
+"h": "ebe04b4c",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"ordering-clocks/0/ar": {
+"f": "ordering-clocks/0-ar.mp3",
+"h": "224a3210",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"ordering-clocks/1": {
+"f": "ordering-clocks/1.mp3",
+"h": "95fb2aa",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"ordering-clocks/1/ar": {
+"f": "ordering-clocks/1-ar.mp3",
+"h": "5a61ce36",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"ordering-clocks/2": {
+"f": "ordering-clocks/2.mp3",
+"h": "be03ef2d",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"ordering-clocks/2/ar": {
+"f": "ordering-clocks/2-ar.mp3",
+"h": "a3d0d798",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"ordering-clocks/3": {
+"f": "ordering-clocks/3.mp3",
+"h": "a8196f4e",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"ordering-clocks/3/ar": {
+"f": "ordering-clocks/3-ar.mp3",
+"h": "8a08a891",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"pagination-at-scale/0": {
+"f": "pagination-at-scale/0.mp3",
+"h": "6be581c3",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"pagination-at-scale/1": {
+"f": "pagination-at-scale/1.mp3",
+"h": "420c9353",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"pagination-at-scale/2": {
+"f": "pagination-at-scale/2.mp3",
+"h": "44601bf9",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"pagination-at-scale/3": {
+"f": "pagination-at-scale/3.mp3",
+"h": "4285165f",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"poison-messages/0": {
+"f": "poison-messages/0.mp3",
+"h": "623ebf7f",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"poison-messages/1": {
+"f": "poison-messages/1.mp3",
+"h": "44a3a378",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"poison-messages/2": {
+"f": "poison-messages/2.mp3",
+"h": "8f5e2bbf",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"poison-messages/3": {
+"f": "poison-messages/3.mp3",
+"h": "e148dbdb",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"progressive-delivery/0": {
+"f": "progressive-delivery/0.mp3",
+"h": "854ec703",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"progressive-delivery/1": {
+"f": "progressive-delivery/1.mp3",
+"h": "76225505",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"progressive-delivery/2": {
+"f": "progressive-delivery/2.mp3",
+"h": "52eca528",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"progressive-delivery/3": {
+"f": "progressive-delivery/3.mp3",
+"h": "968ed172",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"pub-sub/0": {
+"f": "pub-sub/0.mp3",
+"h": "c1e2ddb2",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"pub-sub/0/ar": {
+"f": "pub-sub/0-ar.mp3",
+"h": "c0baceb8",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"pub-sub/1": {
+"f": "pub-sub/1.mp3",
+"h": "4218b46a",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"pub-sub/1/ar": {
+"f": "pub-sub/1-ar.mp3",
+"h": "b12b9098",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"pub-sub/2": {
+"f": "pub-sub/2.mp3",
+"h": "e3cf77f6",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"pub-sub/2/ar": {
+"f": "pub-sub/2-ar.mp3",
+"h": "c788f730",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"pub-sub/3": {
+"f": "pub-sub/3.mp3",
+"h": "3b128d31",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"pub-sub/3/ar": {
+"f": "pub-sub/3-ar.mp3",
+"h": "b2bfe46f",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"rate-limiting/0": {
+"f": "rate-limiting/0.mp3",
+"h": "f17e241",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"rate-limiting/0/ar": {
+"f": "rate-limiting/0-ar.mp3",
+"h": "9144f44f",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"rate-limiting/1": {
+"f": "rate-limiting/1.mp3",
+"h": "5260c4d4",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"rate-limiting/1/ar": {
+"f": "rate-limiting/1-ar.mp3",
+"h": "2eb2bb62",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"rate-limiting/2": {
+"f": "rate-limiting/2.mp3",
+"h": "3204963d",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"rate-limiting/2/ar": {
+"f": "rate-limiting/2-ar.mp3",
+"h": "3f7ec337",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"rate-limiting/3": {
+"f": "rate-limiting/3.mp3",
+"h": "8558e344",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"rate-limiting/3/ar": {
+"f": "rate-limiting/3-ar.mp3",
+"h": "6c202a98",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"read-replicas/0": {
+"f": "read-replicas/0.mp3",
+"h": "730695a0",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"read-replicas/1": {
+"f": "read-replicas/1.mp3",
+"h": "e3d090ce",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"read-replicas/2": {
+"f": "read-replicas/2.mp3",
+"h": "5d616172",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"read-replicas/3": {
+"f": "read-replicas/3.mp3",
+"h": "371bded0",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"real-time/0": {
+"f": "real-time/0.mp3",
+"h": "83e7984d",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"real-time/0/ar": {
+"f": "real-time/0-ar.mp3",
+"h": "8d357551",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"real-time/1": {
+"f": "real-time/1.mp3",
+"h": "4ccee8cc",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"real-time/1/ar": {
+"f": "real-time/1-ar.mp3",
+"h": "872f6c46",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"real-time/2": {
+"f": "real-time/2.mp3",
+"h": "7539b8e5",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"real-time/2/ar": {
+"f": "real-time/2-ar.mp3",
+"h": "571c6094",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"real-time/3": {
+"f": "real-time/3.mp3",
+"h": "ab540510",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"real-time/3/ar": {
+"f": "real-time/3-ar.mp3",
+"h": "119a114f",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"redundancy-failover/0": {
+"f": "redundancy-failover/0.mp3",
+"h": "2d7b845b",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"redundancy-failover/0/ar": {
+"f": "redundancy-failover/0-ar.mp3",
+"h": "3612e415",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"redundancy-failover/1": {
+"f": "redundancy-failover/1.mp3",
+"h": "6c6278e1",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"redundancy-failover/1/ar": {
+"f": "redundancy-failover/1-ar.mp3",
+"h": "aa6dd9de",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"redundancy-failover/2": {
+"f": "redundancy-failover/2.mp3",
+"h": "77785ad2",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"redundancy-failover/2/ar": {
+"f": "redundancy-failover/2-ar.mp3",
+"h": "4ee6113b",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"redundancy-failover/3": {
+"f": "redundancy-failover/3.mp3",
+"h": "1f9f6d12",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"redundancy-failover/3/ar": {
+"f": "redundancy-failover/3-ar.mp3",
+"h": "850b6e8c",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"rest-rpc-graphql/0": {
+"f": "rest-rpc-graphql/0.mp3",
+"h": "969bec34",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"rest-rpc-graphql/0/ar": {
+"f": "rest-rpc-graphql/0-ar.mp3",
+"h": "36f5d486",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"rest-rpc-graphql/1": {
+"f": "rest-rpc-graphql/1.mp3",
+"h": "cda1eae",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"rest-rpc-graphql/1/ar": {
+"f": "rest-rpc-graphql/1-ar.mp3",
+"h": "1382bb25",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"rest-rpc-graphql/2": {
+"f": "rest-rpc-graphql/2.mp3",
+"h": "bde01f26",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"rest-rpc-graphql/2/ar": {
+"f": "rest-rpc-graphql/2-ar.mp3",
+"h": "9f7ae3b1",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"rest-rpc-graphql/3": {
+"f": "rest-rpc-graphql/3.mp3",
+"h": "b899d38c",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"rest-rpc-graphql/3/ar": {
+"f": "rest-rpc-graphql/3-ar.mp3",
+"h": "ef40a766",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"retry-storms/0": {
+"f": "retry-storms/0.mp3",
+"h": "1b2f6144",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"retry-storms/1": {
+"f": "retry-storms/1.mp3",
+"h": "1ea05973",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"retry-storms/2": {
+"f": "retry-storms/2.mp3",
+"h": "a0051005",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"retry-storms/3": {
+"f": "retry-storms/3.mp3",
+"h": "4c8753a2",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"rollback-safety/0": {
+"f": "rollback-safety/0.mp3",
+"h": "927e24e4",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"rollback-safety/0/ar": {
+"f": "rollback-safety/0-ar.mp3",
+"h": "4ac8f9dc",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"rollback-safety/1": {
+"f": "rollback-safety/1.mp3",
+"h": "d9dd24f",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"rollback-safety/1/ar": {
+"f": "rollback-safety/1-ar.mp3",
+"h": "fd011837",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"rollback-safety/2": {
+"f": "rollback-safety/2.mp3",
+"h": "a37bc499",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"rollback-safety/2/ar": {
+"f": "rollback-safety/2-ar.mp3",
+"h": "9e3bc815",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"rollback-safety/3": {
+"f": "rollback-safety/3.mp3",
+"h": "545aeb83",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"rollback-safety/3/ar": {
+"f": "rollback-safety/3-ar.mp3",
+"h": "ef6c50ec",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"sagas/0": {
+"f": "sagas/0.mp3",
+"h": "103753d5",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"sagas/0/ar": {
+"f": "sagas/0-ar.mp3",
+"h": "98caaf82",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"sagas/1": {
+"f": "sagas/1.mp3",
+"h": "dffa3666",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"sagas/1/ar": {
+"f": "sagas/1-ar.mp3",
+"h": "bfe40828",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"sagas/2": {
+"f": "sagas/2.mp3",
+"h": "73e6e45a",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"sagas/2/ar": {
+"f": "sagas/2-ar.mp3",
+"h": "8f5d4840",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"sagas/3": {
+"f": "sagas/3.mp3",
+"h": "d2e8a7f",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"sagas/3/ar": {
+"f": "sagas/3-ar.mp3",
+"h": "9348c9db",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"search-indexing/0": {
+"f": "search-indexing/0.mp3",
+"h": "b3dca078",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"search-indexing/0/ar": {
+"f": "search-indexing/0-ar.mp3",
+"h": "8906338b",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"search-indexing/1": {
+"f": "search-indexing/1.mp3",
+"h": "f032fc81",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"search-indexing/1/ar": {
+"f": "search-indexing/1-ar.mp3",
+"h": "8c1f56b5",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"search-indexing/2": {
+"f": "search-indexing/2.mp3",
+"h": "2f3d17ab",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"search-indexing/2/ar": {
+"f": "search-indexing/2-ar.mp3",
+"h": "e39048e",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"search-indexing/3": {
+"f": "search-indexing/3.mp3",
+"h": "41a50d35",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"search-indexing/3/ar": {
+"f": "search-indexing/3-ar.mp3",
+"h": "a6634ccf",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"service-discovery/0": {
+"f": "service-discovery/0.mp3",
+"h": "c60c1d35",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"service-discovery/0/ar": {
+"f": "service-discovery/0-ar.mp3",
+"h": "c852ce2d",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"service-discovery/1": {
+"f": "service-discovery/1.mp3",
+"h": "eb22d565",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"service-discovery/1/ar": {
+"f": "service-discovery/1-ar.mp3",
+"h": "166ca0b3",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"service-discovery/2": {
+"f": "service-discovery/2.mp3",
+"h": "309f139",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"service-discovery/2/ar": {
+"f": "service-discovery/2-ar.mp3",
+"h": "ee4aaa6b",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"service-discovery/3": {
+"f": "service-discovery/3.mp3",
+"h": "680fada9",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"service-discovery/3/ar": {
+"f": "service-discovery/3-ar.mp3",
+"h": "7d58a9e2",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"sharding/0": {
+"f": "sharding/0.mp3",
+"h": "8d8e8414",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"sharding/1": {
+"f": "sharding/1.mp3",
+"h": "9c8d9542",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"sharding/2": {
+"f": "sharding/2.mp3",
+"h": "2e9fbffe",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"sharding/3": {
+"f": "sharding/3.mp3",
+"h": "24be1c6d",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"split-brain/0": {
+"f": "split-brain/0.mp3",
+"h": "cc1cb098",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"split-brain/1": {
+"f": "split-brain/1.mp3",
+"h": "3beda08a",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"split-brain/2": {
+"f": "split-brain/2.mp3",
+"h": "5479dfba",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"split-brain/3": {
+"f": "split-brain/3.mp3",
+"h": "350e2cf4",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"sql-vs-nosql/0": {
+"f": "sql-vs-nosql/0.mp3",
+"h": "4b71311d",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"sql-vs-nosql/0/ar": {
+"f": "sql-vs-nosql/0-ar.mp3",
+"h": "c604cb50",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"sql-vs-nosql/1": {
+"f": "sql-vs-nosql/1.mp3",
+"h": "828ba679",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"sql-vs-nosql/1/ar": {
+"f": "sql-vs-nosql/1-ar.mp3",
+"h": "5f4731b7",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"sql-vs-nosql/2": {
+"f": "sql-vs-nosql/2.mp3",
+"h": "2b993f04",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"sql-vs-nosql/2/ar": {
+"f": "sql-vs-nosql/2-ar.mp3",
+"h": "ab76caeb",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"sql-vs-nosql/3": {
+"f": "sql-vs-nosql/3.mp3",
+"h": "6b8fb751",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"sql-vs-nosql/3/ar": {
+"f": "sql-vs-nosql/3-ar.mp3",
+"h": "caf746be",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"stale-reads/0": {
+"f": "stale-reads/0.mp3",
+"h": "acce7d35",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"stale-reads/1": {
+"f": "stale-reads/1.mp3",
+"h": "7e20a658",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"stale-reads/2": {
+"f": "stale-reads/2.mp3",
+"h": "91dab9a3",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"stale-reads/3": {
+"f": "stale-reads/3.mp3",
+"h": "df7a1738",
+"v": "edge:en-US-AndrewMultilingualNeural"
 },
 "stateless-services/0": {
 "f": "stateless-services/0.mp3",
-"h": "32eef9a9"
+"h": "ef96041c",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"stateless-services/0/ar": {
+"f": "stateless-services/0-ar.mp3",
+"h": "6490935b",
+"v": "edge:ar-EG-ShakirNeural"
 },
 "stateless-services/1": {
 "f": "stateless-services/1.mp3",
-"h": "383babd2"
+"h": "994c5d94",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"stateless-services/1/ar": {
+"f": "stateless-services/1-ar.mp3",
+"h": "9283ad5f",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"stateless-services/2": {
+"f": "stateless-services/2.mp3",
+"h": "c4472e11",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"stateless-services/2/ar": {
+"f": "stateless-services/2-ar.mp3",
+"h": "476cac2e",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"stateless-services/3": {
+"f": "stateless-services/3.mp3",
+"h": "95cd5598",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"stateless-services/3/ar": {
+"f": "stateless-services/3-ar.mp3",
+"h": "49dd2de6",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"storage-engines/0": {
+"f": "storage-engines/0.mp3",
+"h": "484cc3fb",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"storage-engines/0/ar": {
+"f": "storage-engines/0-ar.mp3",
+"h": "39cb5344",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"storage-engines/1": {
+"f": "storage-engines/1.mp3",
+"h": "baac9bb3",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"storage-engines/1/ar": {
+"f": "storage-engines/1-ar.mp3",
+"h": "52037eb",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"storage-engines/2": {
+"f": "storage-engines/2.mp3",
+"h": "70df7ade",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"storage-engines/2/ar": {
+"f": "storage-engines/2-ar.mp3",
+"h": "eb9cd29b",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"storage-engines/3": {
+"f": "storage-engines/3.mp3",
+"h": "d92cec4c",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"storage-engines/3/ar": {
+"f": "storage-engines/3-ar.mp3",
+"h": "afc3bc5d",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"strangler-migration/0": {
+"f": "strangler-migration/0.mp3",
+"h": "65eccbfa",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"strangler-migration/1": {
+"f": "strangler-migration/1.mp3",
+"h": "ffea0eaa",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"strangler-migration/2": {
+"f": "strangler-migration/2.mp3",
+"h": "af05ed7",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"strangler-migration/3": {
+"f": "strangler-migration/3.mp3",
+"h": "3a3f20eb",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"tail-latency/0": {
+"f": "tail-latency/0.mp3",
+"h": "6a43a64d",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"tail-latency/1": {
+"f": "tail-latency/1.mp3",
+"h": "e2b46179",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"tail-latency/2": {
+"f": "tail-latency/2.mp3",
+"h": "5a78fca3",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"tail-latency/3": {
+"f": "tail-latency/3.mp3",
+"h": "cb0c8f4",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"testing/0": {
+"f": "testing/0.mp3",
+"h": "397520c0",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"testing/0/ar": {
+"f": "testing/0-ar.mp3",
+"h": "c5681553",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"testing/1": {
+"f": "testing/1.mp3",
+"h": "44130aa7",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"testing/1/ar": {
+"f": "testing/1-ar.mp3",
+"h": "bb6eb88c",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"testing/2": {
+"f": "testing/2.mp3",
+"h": "534d1bec",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"testing/2/ar": {
+"f": "testing/2-ar.mp3",
+"h": "f8bc2c76",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"testing/3": {
+"f": "testing/3.mp3",
+"h": "1206946e",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"testing/3/ar": {
+"f": "testing/3-ar.mp3",
+"h": "7481d73",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"thundering-herd/0": {
+"f": "thundering-herd/0.mp3",
+"h": "363e701b",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"thundering-herd/1": {
+"f": "thundering-herd/1.mp3",
+"h": "dfa83eb3",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"thundering-herd/2": {
+"f": "thundering-herd/2.mp3",
+"h": "6e997451",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"thundering-herd/3": {
+"f": "thundering-herd/3.mp3",
+"h": "4a7ff71b",
+"v": "edge:en-US-AndrewMultilingualNeural"
 },
 "timeouts-retries/0": {
 "f": "timeouts-retries/0.mp3",
 "h": "a518c5b8",
 "v": "edge:en-US-AndrewMultilingualNeural"
+},
+"timeouts-retries/0/ar": {
+"f": "timeouts-retries/0-ar.mp3",
+"h": "a42706ee",
+"v": "edge:ar-EG-ShakirNeural"
 },
 "timeouts-retries/1": {
 "f": "timeouts-retries/1.mp3",
@@ -71,21 +2377,185 @@
 "h": "67311cd0",
 "v": "edge:ar-EG-ShakirNeural"
 },
+"transactions-isolation/0": {
+"f": "transactions-isolation/0.mp3",
+"h": "d2790009",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"transactions-isolation/0/ar": {
+"f": "transactions-isolation/0-ar.mp3",
+"h": "82cacc68",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"transactions-isolation/1": {
+"f": "transactions-isolation/1.mp3",
+"h": "a5aac610",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"transactions-isolation/1/ar": {
+"f": "transactions-isolation/1-ar.mp3",
+"h": "1c2216f2",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"transactions-isolation/2": {
+"f": "transactions-isolation/2.mp3",
+"h": "a73c76e8",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"transactions-isolation/2/ar": {
+"f": "transactions-isolation/2-ar.mp3",
+"h": "f9a426f9",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"transactions-isolation/3": {
+"f": "transactions-isolation/3.mp3",
+"h": "d0b75c82",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"transactions-isolation/3/ar": {
+"f": "transactions-isolation/3-ar.mp3",
+"h": "5335c6d1",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"unique-ids/0": {
+"f": "unique-ids/0.mp3",
+"h": "f6b19214",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"unique-ids/0/ar": {
+"f": "unique-ids/0-ar.mp3",
+"h": "3fb17f28",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"unique-ids/1": {
+"f": "unique-ids/1.mp3",
+"h": "68bbcd1",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"unique-ids/1/ar": {
+"f": "unique-ids/1-ar.mp3",
+"h": "9836917e",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"unique-ids/2": {
+"f": "unique-ids/2.mp3",
+"h": "a84559bb",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"unique-ids/2/ar": {
+"f": "unique-ids/2-ar.mp3",
+"h": "173d23ac",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"unique-ids/3": {
+"f": "unique-ids/3.mp3",
+"h": "49fab7f6",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"unique-ids/3/ar": {
+"f": "unique-ids/3-ar.mp3",
+"h": "baffaedc",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"url-shortener/0": {
+"f": "url-shortener/0.mp3",
+"h": "c3e7296f",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"url-shortener/0/ar": {
+"f": "url-shortener/0-ar.mp3",
+"h": "62d28c9",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"url-shortener/1": {
+"f": "url-shortener/1.mp3",
+"h": "67591861",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"url-shortener/1/ar": {
+"f": "url-shortener/1-ar.mp3",
+"h": "eb17d1e6",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"url-shortener/2": {
+"f": "url-shortener/2.mp3",
+"h": "e9f7d54a",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"url-shortener/2/ar": {
+"f": "url-shortener/2-ar.mp3",
+"h": "380cd28b",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"url-shortener/3": {
+"f": "url-shortener/3.mp3",
+"h": "276e5b39",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"url-shortener/3/ar": {
+"f": "url-shortener/3-ar.mp3",
+"h": "e528b27",
+"v": "edge:ar-EG-ShakirNeural"
+},
 "vertical-vs-horizontal/0": {
 "f": "vertical-vs-horizontal/0.mp3",
-"h": "433d6322"
+"h": "8277723a",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"vertical-vs-horizontal/0/ar": {
+"f": "vertical-vs-horizontal/0-ar.mp3",
+"h": "194b2691",
+"v": "edge:ar-EG-ShakirNeural"
 },
 "vertical-vs-horizontal/1": {
 "f": "vertical-vs-horizontal/1.mp3",
-"h": "38225f0b"
+"h": "acb6e26e",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"vertical-vs-horizontal/1/ar": {
+"f": "vertical-vs-horizontal/1-ar.mp3",
+"h": "7bdca09a",
+"v": "edge:ar-EG-ShakirNeural"
 },
 "vertical-vs-horizontal/2": {
 "f": "vertical-vs-horizontal/2.mp3",
-"h": "303d0124"
+"h": "cd9254a7",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"vertical-vs-horizontal/2/ar": {
+"f": "vertical-vs-horizontal/2-ar.mp3",
+"h": "9eedf5e1",
+"v": "edge:ar-EG-ShakirNeural"
 },
 "vertical-vs-horizontal/3": {
 "f": "vertical-vs-horizontal/3.mp3",
-"h": "e08c3f4b"
+"h": "befd6e6e",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"vertical-vs-horizontal/3/ar": {
+"f": "vertical-vs-horizontal/3-ar.mp3",
+"h": "b6d8da2e",
+"v": "edge:ar-EG-ShakirNeural"
+},
+"zero-downtime-migrations/0": {
+"f": "zero-downtime-migrations/0.mp3",
+"h": "8019a00d",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"zero-downtime-migrations/1": {
+"f": "zero-downtime-migrations/1.mp3",
+"h": "3a822fda",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"zero-downtime-migrations/2": {
+"f": "zero-downtime-migrations/2.mp3",
+"h": "94f70bd6",
+"v": "edge:en-US-AndrewMultilingualNeural"
+},
+"zero-downtime-migrations/3": {
+"f": "zero-downtime-migrations/3.mp3",
+"h": "a3b287b",
+"v": "edge:en-US-AndrewMultilingualNeural"
 }
 },
 "model": "edge-tts",
