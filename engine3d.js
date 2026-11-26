@@ -90,6 +90,7 @@ root.innerHTML = `
     <div class="s3-foot"><span class="s3-legend"></span><label class="s3-scrub"><span>timeline</span><input type="range" min="0" max="1000" value="0" aria-label="Animation timeline"></label>
       <div class="s3-btns"><button class="btn" data-a="replay" title="Replay (R)">${svg("replay")}Replay</button><button class="btn" data-a="pause" title="Pause (Space)"></button><button class="btn ic" data-a="zin" aria-label="Zoom in">${svg("plus")}</button><button class="btn ic" data-a="zout" aria-label="Zoom out">${svg("minus")}</button><button class="btn ic" data-a="view" aria-label="Reset camera" title="Reset camera (V)">${svg("frame")}</button></div></div>
   </section>
+  <p class="s3-sr" aria-live="polite"></p>
   <section class="s3-trace"><h3><b>TRACE</b><span>events in order, slowed down to watch</span></h3><div class="s3-log"></div></section>`;
 const q = (s) => root.querySelector(s);
 const fig = q(".s3-fig"), ov = q(".s3-ov"), tip = q(".s3-tip"), metricsEl = q(".s3-metrics"), logEl = q(".s3-log"), legendEl = q(".s3-legend"), scrub = q(".s3-scrub input"), pauseBtn = q('[data-a="pause"]');
@@ -397,6 +398,11 @@ const setStep = (idx, now = performance.now(), first = false) => {
   pool.forEach((m, k) => { m.userData.born = base2 + k * 70; m.material.color.copy(C("--panel")); m.visible = false; });
   poolState = ringState = gateState = null; storyTags = {}; storyMetrics = null; lastMetrics = null;
   if (step.gate) { const [f, t] = step.gate.split(">"), L = lineFor(f, t, 0); if (L) { gate.visible = true; gate.position.copy(L.p0).lerp(L.p1, 0.5).setY(0); gate.rotation.y = Math.atan2(-L.dir.z, L.dir.x); gate.scale.y = 0.01; gate.userData.mid = gate.position.clone(); } } else gate.visible = false;
+  /* text description for screen readers */
+  const shown = lesson.nodes.filter((n) => show.has(n.id)).map((n) => n.label);
+  const flowTxt = step.flows.filter(([a, b]) => nodes[a] && nodes[b]).map(([a, b, k]) => a === b ? `${nodes[a].n.label} is busy` : `${nodes[a].n.label} to ${nodes[b].n.label} (${LEGEND[k] || k})`);
+  q(".s3-sr").textContent = `Step ${idx + 1}: ${step.title}. Shows ${shown.join(", ")}. ${flowTxt.length ? "Traffic: " + flowTxt.join("; ") + "." : "No traffic."}`;
+  fig.setAttribute("aria-label", `3D diagram, step ${idx + 1}: ${step.title}. Drag to rotate, click a component to zoom in.`);
   const kinds = [...new Set(events.map((e) => e.k).concat(events.filter((e) => e.popKind).map((e) => e.popKind)))];
   const lg = kinds.map((k) => `<span><i style="background:var(${kindVar[k]})"></i>${LEGEND[k]}</span>`).join("");
   if (lg !== lastLegend) { legendEl.innerHTML = lg; lastLegend = lg; }
