@@ -145,14 +145,91 @@ L({
     "A circuit breaker opens after repeated failures and fails fast for a cooldown period, then lets a few trial requests through (half-open).",
   ],
   iv: ["Set timeouts as a budget: the downstream timeout must be shorter than the caller's.", "Retry at one layer only, otherwise retries multiply."],
-  refs: [["AWS Architecture Blog: Exponential backoff and jitter", "https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/"], ["Martin Fowler: Circuit Breaker", "https://martinfowler.com/bliki/CircuitBreaker.html"]],
-  nodes: [N("client", "client", 100, 220, "client"), N("a", "checkout service", 340, 220), N("b", "payment API", 610, 220, "ext")],
-  steps: [
-    { t: "problem", s: "Hang", h: "The payment API hangs", b: "Calls never return. Each one holds a worker thread, and within a minute every checkout worker is stuck, so checkout is down too.", k: "A missing timeout turns a slow dependency into an outage.", f: "client>a:req, a>b:fail", a: "a b" },
-    { t: "concept", s: "Timeout", h: "Bound every call", b: "Set a 2 s timeout on the payment call and a 5 s timeout at the edge. Workers are freed and the user gets a clear error.", k: "Timeouts cap how long failure can hold resources.", f: "a>b:req, b>a:fail, a>client:res", a: "a" },
-    { t: "concept", s: "Retry", h: "Retry with backoff and jitter", b: "Retry transient failures after 100 ms, 200 ms, 400 ms (± random jitter), at most 3 times, and only if the operation is idempotent or carries an idempotency key.", k: "Backoff + jitter avoids synchronised retry waves.", f: "a>b:fail, a>b:req, b>a:res", a: "a b" },
-    { t: "case", s: "Breaker", h: "Circuit breaker", b: "After 50% failures in 10 s the breaker opens: calls fail instantly for 30 s instead of piling on. Then a few trial calls test whether the API recovered.", k: "Fail fast while a dependency is down; probe to recover.", f: "client>a:req, a>client:res, a>b:fail", a: "a" },
+  refs: [["AWS Architecture Blog: Exponential backoff and jitter", "https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/"], ["Martin Fowler: Circuit Breaker", "https://martinfowler.com/bliki/CircuitBreaker.html"], ["requests: timeouts", "https://requests.readthedocs.io/en/latest/user/advanced/#timeouts"], ["tenacity docs", "https://tenacity.readthedocs.io/"], ["pybreaker", "https://github.com/danielfm/pybreaker"]],
+  nodes: [
+    N("client", "client", 90, 230, "client", "The shopper's browser. It calls <code>POST /checkout</code> and waits."),
+    N("a", "checkout service", 360, 220, "server", "Django checkout service with a pool of 8 worker threads. A call to the payment API holds one worker until it returns."),
+    N("b", "payment API", 650, 210, "ext", "Third-party payment API (<code>POST /v1/charges</code>). Outside your control: it can be slow or hang."),
   ],
+  steps: (() => {
+    const ev = (f, t, k, at, dur, o = {}) => ({ f, t, k, at, dur, ...o });
+    const POOL = 8;
+    const hang = [...Array.from({ length: POOL }, (_, k) => [
+      ev("client", "a", "req", k * 600, 500, { log: "POST /checkout" }),
+      ev("a", "b", "req", k * 600 + 450, 650, { endAt: 0.9 - k * 0.075, hold: 6400 - (k * 600 + 1100) - 300, end: "fade", log: "POST /v1/charges  (no timeout)" }),
+    ]).flat(),
+    ev("client", "a", "fail", 5000, 500, { endAt: 0.55, end: "pop", log: "POST /checkout", done: "503 · no free worker" }),
+    ev("client", "a", "fail", 5650, 500, { endAt: 0.55, end: "pop", log: "POST /checkout", done: "503 · no free worker" })];
+    return [
+      { t: "problem", s: "Hang", h: "The payment API hangs", b: "Calls never return. Each one holds a worker thread, and within a minute every checkout worker is stuck, so checkout is down too.", k: "A missing timeout turns a slow dependency into an outage.",
+        f: "client>a:req, a>b:fail", a: "a b", L: 6400, ev: hang,
+        setup: [["timeout", "none", "bad"], ["workers", "8 threads"], ["retries", "—"], ["breaker", "—"]],
+        code: "# no timeout: requests waits forever by default\nresp = requests.post(PAYMENT_URL, json=charge)",
+        note: "requests has no default timeout, so a hung socket blocks the worker indefinitely.",
+        fx(t, S) {
+          const busy = Math.min(POOL, hang.filter((e) => e.f === "a" && t >= e.at + e.dur).length);
+          S.pool("a", Array.from({ length: POOL }, (_, i) => (i < busy ? "stuck" : "idle")));
+          S.metric("cpu", "Workers busy", `${busy} / ${POOL}`, busy === POOL ? "bad" : busy ? "warn" : "");
+          S.metric("hourglass", "Payment reply", "never", "bad");
+          S.metric("activity", "Checkout", busy === POOL ? "down" : "degrading", busy === POOL ? "bad" : "warn");
+          S.tag("b", t > 1100 ? `no reply · ${(t / 1000).toFixed(1)} s` : "", "bad", "hourglass");
+          S.tag("a", busy === POOL ? "pool exhausted 8/8" : busy ? `${busy}/8 workers stuck` : "worker pool", busy === POOL ? "bad" : busy ? "warn" : "", "cpu");
+          S.tag("client", t > 5000 ? "503 checkout down" : "", "bad", "x");
+        } },
+      { t: "concept", s: "Timeout", h: "Bound every call", b: "Set a 2 s timeout on the payment call and a 5 s timeout at the edge. Workers are freed and the user gets a clear error.", k: "Timeouts cap how long failure can hold resources.",
+        f: "client>a:req, a>b:req, a>client:res", a: "a", L: 4400,
+        ev: [ev("client", "a", "req", 0, 550, { log: "POST /checkout" }), ev("a", "b", "req", 500, 650, { endAt: 0.82, hold: 1350, end: "pop", popKind: "fail", log: "POST /v1/charges  timeout=(0.5, 2)", done: "ReadTimeout after 2.0 s" }), ev("a", "client", "res", 2800, 650, { log: "502 payment unavailable, try again", tone: "warn" })],
+        setup: [["timeout", "connect 0.5 s, read 2 s", "hi"], ["edge", "5 s"], ["retries", "—"], ["breaker", "—"]],
+        code: "# (connect, read) timeouts in seconds\nresp = requests.post(PAYMENT_URL, json=charge, timeout=(0.5, 2))",
+        note: "The downstream timeout (2 s) must be shorter than the caller's (5 s), or the caller gives up first.",
+        fx(t, S) {
+          const on = t >= 500 && t < 2500, freed = t >= 2500 && t < 3600;
+          S.pool("a", Array.from({ length: POOL }, (_, i) => (i === 0 ? (on ? "busy" : freed ? "free" : "idle") : "idle")));
+          S.ring("a", on ? (t - 500) / 2000 : 0, t > 2100 ? "--fail" : "--req");
+          S.metric("timer", "Read timeout", "2.0 s", "ok");
+          S.metric("cpu", "Workers busy", on ? `1 / ${POOL}` : `0 / ${POOL}`, on ? "warn" : "ok");
+          S.metric("hourglass", "User waits", t > 3400 ? "≈ 2 s" : "…", t > 3400 ? "ok" : "");
+          S.tag("a", on ? `timeout in ${Math.max(0, (2500 - t) / 1000).toFixed(1)} s` : freed ? "timed out · worker freed" : "worker pool", on ? "warn" : freed ? "ok" : "", on ? "timer" : freed ? "check" : "cpu", on ? (t - 500) / 2000 : null);
+          S.tag("b", t >= 1150 && t < 2500 ? "slow…" : "", "bad", "hourglass");
+          S.tag("client", t > 3400 ? "clear error, no hang" : "", "ok", "check");
+        } },
+      { t: "concept", s: "Retry", h: "Retry with backoff and jitter", b: "Retry transient failures after 100 ms, 200 ms, 400 ms (± random jitter), at most 3 times, and only if the operation is idempotent or carries an idempotency key.", k: "Backoff + jitter avoids synchronised retry waves.",
+        f: "a>b:req, b>a:res, a>client:res", a: "a b", L: 6400,
+        ev: [ev("a", "b", "fail", 0, 700, { endAt: 0.82, end: "pop", log: "POST /v1/charges  attempt 1", done: "503 Service Unavailable" }), ev("a", "b", "fail", 1450, 700, { endAt: 0.82, end: "pop", log: "POST /v1/charges  attempt 2 (after 100 ms)", done: "503 Service Unavailable" }),
+          ev("a", "b", "req", 3350, 700, { log: "POST /v1/charges  attempt 3 (after 200 ms)" }), ev("b", "a", "res", 4100, 700, { log: "200 OK  ch_91x (same Idempotency-Key)", tone: "ok" }), ev("a", "client", "res", 4850, 650, { log: "201 Created", tone: "ok" })],
+        setup: [["timeout", "connect 0.5 s, read 2 s"], ["retries", "max 3 attempts", "hi"], ["backoff", "100 → 200 → 400 ms ± jitter", "hi"], ["breaker", "—"]],
+        code: "@retry(stop=stop_after_attempt(3),\n       wait=wait_random_exponential(multiplier=0.1, max=2),\n       retry=retry_if_exception_type(TRANSIENT))\ndef charge(payload, key):\n    resp = requests.post(PAYMENT_URL, json=payload, timeout=(0.5, 2),\n                         headers={\"Idempotency-Key\": key})\n    resp.raise_for_status()\n    return resp",
+        note: "tenacity. TRANSIENT = (Timeout, ConnectionError) plus 502/503/504. Never retry a 4xx.",
+        fx(t, S) {
+          const ph = t < 1000 ? 1 : t < 1450 ? "w1" : t < 2450 ? 2 : t < 3350 ? "w2" : 3, wait = typeof ph !== "number";
+          S.ring("a", ph === "w1" ? (t - 1000) / 450 : ph === "w2" ? (t - 2450) / 900 : 0, "--sync");
+          S.metric("repeat", "Attempt", `${wait ? (ph === "w1" ? 1 : 2) : ph} / 3`, t > 4100 ? "ok" : "warn");
+          S.metric("timer", "Backoff", ph === "w1" ? "100 ms ± jitter" : ph === "w2" ? "200 ms ± jitter" : "—", wait ? "warn" : "");
+          S.metric("key", "Idempotency-Key", "pay_7f3a", "ok");
+          S.tag("a", ph === "w1" ? "backoff 100 ms" : ph === "w2" ? "backoff 200 ms" : t > 4100 ? "succeeded on attempt 3" : `attempt ${ph} / 3`, t > 4100 ? "ok" : wait ? "warn" : "", t > 4100 ? "check" : wait ? "timer" : "repeat", ph === "w1" ? (t - 1000) / 450 : ph === "w2" ? (t - 2450) / 900 : null);
+          S.tag("b", t < 2450 && t > 600 ? "503" : "", "bad", "x");
+        } },
+      { t: "case", s: "Breaker", h: "Circuit breaker", b: "After 50% failures in 10 s the breaker opens: calls fail instantly for 30 s instead of piling on. Then a few trial calls test whether the API recovered.", k: "Fail fast while a dependency is down; probe to recover.",
+        f: "client>a:req, a>client:res, a>b:req, b>a:res", a: "a", L: 8200, gate: "a>b",
+        ev: [0, 800, 1600].flatMap((t) => [ev("client", "a", "req", t, 400, { log: "POST /checkout" }), ev("a", "b", "fail", t + 350, 550, { endAt: 0.82, end: "pop", log: "POST /v1/charges", done: "503 Service Unavailable" })])
+          .concat([2700, 3500, 4300, 5100].flatMap((t) => [ev("client", "a", "req", t, 400, { log: "POST /checkout" }), ev("a", "client", "fail", t + 420, 380, { log: "503 CircuitBreakerError (instant)", tone: "warn" })]))
+          .concat([ev("a", "b", "req", 5800, 550, { log: "POST /v1/charges  trial call" }), ev("b", "a", "res", 6350, 550, { log: "200 OK  breaker closes", tone: "ok" }), ev("client", "a", "req", 7100, 400, { log: "POST /checkout" }), ev("a", "client", "res", 7500, 400, { log: "201 Created", tone: "ok" })]),
+        setup: [["timeout", "connect 0.5 s, read 2 s"], ["retries", "max 3 attempts"], ["opens at", "50% failures in 10 s", "hi"], ["cooldown", "30 s, then 1 trial call", "hi"]],
+        code: "breaker = pybreaker.CircuitBreaker(fail_max=5, reset_timeout=30)\n\n@breaker\ndef charge(payload, key): ...\n\ntry:\n    charge(payload, key)\nexcept pybreaker.CircuitBreakerError:\n    return JsonResponse({\"error\": \"payments degraded\"}, status=503)",
+        note: "pybreaker opens after N consecutive failures; rate-based breakers (50% in 10 s) count a sliding window instead.",
+        fx(t, S) {
+          const st = t < 2400 ? "CLOSED" : t < 5600 ? "OPEN" : t < 6900 ? "HALF-OPEN" : "CLOSED";
+          const tone = { CLOSED: t < 2400 ? "warn" : "ok", OPEN: "bad", "HALF-OPEN": "warn" }[st];
+          S.gate(st);
+          S.ring("a", st === "OPEN" ? (t - 2400) / 3200 : 0, "--fail");
+          S.metric("shield", "Breaker", st, tone);
+          S.metric("activity", "Failure rate", t < 2400 ? `${[0, 33, 66, 100][Math.min(3, Math.floor(t / 800) + (t >= 900 ? 1 : 0))]}%` : st === "OPEN" ? "over 50%" : "0%", t < 2400 ? "warn" : st === "OPEN" ? "bad" : "ok");
+          S.metric("card", "Calls to payment", st === "OPEN" ? "blocked" : st === "HALF-OPEN" ? "1 trial call" : "flowing", st === "OPEN" ? "bad" : "");
+          S.tag("mid", st === "OPEN" ? `OPEN · retry in ${Math.ceil(30 * (1 - (t - 2400) / 3200))} s` : st === "HALF-OPEN" ? "HALF-OPEN · trial call" : t < 2400 ? "CLOSED · counting failures" : "CLOSED · recovered", tone, "shield", st === "OPEN" ? (t - 2400) / 3200 : null);
+          S.tag("client", st === "OPEN" ? "instant 503, no waiting" : "", "warn", "zap");
+        } },
+    ];
+  })(),
 });
 
 L({
