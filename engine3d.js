@@ -197,7 +197,18 @@ let lesson = null, stepIdx = 0, step = null, clock = 0, paused = false, scrubbin
 let nodes = {}, pipes = [], packets = [], events = [], loopL = 3000, trace = [], lastTrace = "", lastMetrics = "", lastLegend = "";
 let corners = [];
 let poolState = null, ringState = null, gateState = null, storyTags = {}, storyMetrics = null;
-const DEF = () => (fig.clientWidth && fig.clientWidth < 600 ? { spin: -68, tilt: 52 } : { spin: -40, tilt: 57 });
+const fitScale = (spin, tilt) => {
+  const th = THREE.MathUtils.degToRad(tilt), ph = THREE.MathUtils.degToRad(spin), cam = new THREE.OrthographicCamera();
+  cam.position.set(Math.sin(th) * Math.sin(ph) * 2400, Math.cos(th) * 2400, Math.sin(th) * Math.cos(ph) * 2400); cam.lookAt(0, 0, 0); cam.updateMatrixWorld();
+  let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9; const v = new THREE.Vector3();
+  corners.forEach((c) => { v.copy(c).applyMatrix4(cam.matrixWorldInverse); x0 = Math.min(x0, v.x); x1 = Math.max(x1, v.x); y0 = Math.min(y0, v.y); y1 = Math.max(y1, v.y); });
+  const asp = fig.clientWidth / Math.max(1, fig.clientHeight); return Math.max((x1 - x0) / asp, y1 - y0);
+};
+const DEF = () => {
+  if (!fig.clientWidth || fig.clientWidth >= 600 || !corners.length) return { spin: -40, tilt: 57 };
+  const best = [-40, -55, -68, -80, -25].map((spin) => ({ spin, tilt: 54, s: fitScale(spin, 54) })).sort((a, b) => a.s - b.s)[0];
+  return { spin: best.spin, tilt: best.tilt };
+};
 const view = { spin: -40, tilt: 57, zoom: 1, focus: null, f: 0, z: 1 };
 
 const W = (n) => new THREE.Vector3(n.x - 400, 0, n.y - 220);
@@ -330,7 +341,7 @@ const flushMetrics = () => {
     const prev = lesson.steps[stepIdx - 1];
     items = (lesson.metricKeys || []).map((k) => { const v = step.metrics[k]; return [metricIcon(k), k, v ?? "—", v && (!prev || prev.metrics[k] !== v) ? "changed" : ""]; });
   }
-  const html = items.map(([ic, k, v, tone]) => `<div class="s3-metric ${tone || ""}"><small>${svg(ic)}${esc(k)}</small><b>${esc(v)}</b></div>`).join("");
+  const html = items.map(([ic, k, v, tone]) => `<div class="s3-metric ${tone || ""}" title="${esc(k)}: ${esc(v)}"><small>${svg(ic)}${esc(k)}</small><b>${esc(v)}</b></div>`).join("");
   if (html !== lastMetrics) { metricsEl.innerHTML = html; lastMetrics = html; }
 };
 
