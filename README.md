@@ -5,6 +5,9 @@ Revision site for backend interviews, with a home page, a timed practice mode (`
 - **System Design**: 45 lessons in 11 modules (foundations, scaling, data & storage, communication, reliability, architecture, security, shipping, whole-system designs, data-intensive patterns, designs from the field).
 - **Interview Problems**: 27 problems. 14 classics: dual write, duplicate requests, lost update, exactly-once, distributed locks, stale reads, clocks, split brain, thundering herd, hot partitions, retry storms, poison messages, backpressure, pagination. Plus senior (zero-downtime migrations, rollback safety, noisy neighbours, tail latency), team-lead (incidents, canaries and flags, error budgets, strangler migrations) and CTO problems (build vs buy, disaster recovery, cells, Conway's law, cloud costs).
 - **Senior Django**: 30 questions, each with a 3D walkthrough, model answer, code, follow-ups and links to the official docs, plus a Q&A list with filters and a mock-interview drill.
+- **Try it labs**: Timeouts & Retries, Rate Limiting, Caching and Django connection pooling end with a step where you change the setup (timeout, retries, breaker, limiter, TTL, pooler…) and a small simulation replays the scene with your settings. Defined in `data/labs.js`.
+- **Draw it yourself** (`#/draw`): sketch a design on a board, then check it against a rubric of required parts, connections and red flags. `draw.js`.
+- **Progress sync** (optional): a Django + DRF service in `sync-api/`. Off until the `atlas-sync` meta tag in `index.html` points at a deployed copy.
 
 No build step, but the 3D engine is an ES module, so serve the folder rather than opening `index.html` from disk:
 
@@ -18,6 +21,6 @@ python3 -m http.server 8000
 
 ## Adding content
 
-- `data/dsl.js` documents the compact lesson format.
+- `data/dsl.js` documents the compact lesson format. `data/labs.js` documents the lab format.
 - System design lessons: `data/sd-*.js`. Interview problems: `data/interview-problems.js` and `data/ip-leadership.js`. Course order: `data/curriculum.js`.
 - Django questions: `data/django.js`. Their 3D scenes and references: `data/django-scenes.js`.
