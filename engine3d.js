@@ -7,7 +7,14 @@ import { RoundedBoxGeometry } from "./vendor/RoundedBoxGeometry.js";
 
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-const C = (v) => new THREE.Color(v.startsWith("--") ? css(v) || "#888888" : v);
+const colorCache = new Map();
+const C = (v) => {
+  if (!v.startsWith("--")) return new THREE.Color(v);
+  let c = colorCache.get(v);
+  if (!c) { c = new THREE.Color(css(v) || "#888888"); colorCache.set(v, c); }
+  return c.clone();
+};
+const DISPLAY = `"Space Grotesk", "JetBrains Mono", ui-sans-serif, sans-serif`;
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
 const easeOutBack = (x) => { const c1 = 1.55, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
@@ -148,10 +155,45 @@ const cyl = (r, h, mat, parent) => {
 };
 const canvasTex = (w, h, draw) => { const c = document.createElement("canvas"); c.width = w; c.height = h; draw(c.getContext("2d")); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; };
 
+/* soft contact shadow under each unit */
+let blobTex = null;
+const blob = (w, d) => {
+  blobTex = blobTex || canvasTex(128, 128, (x) => { const g = x.createRadialGradient(64, 64, 4, 64, 64, 64); g.addColorStop(0, "rgba(0,0,0,0.55)"); g.addColorStop(0.55, "rgba(0,0,0,0.22)"); g.addColorStop(1, "rgba(0,0,0,0)"); x.fillStyle = g; x.fillRect(0, 0, 128, 128); });
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: blobTex, transparent: true, depthWrite: false, opacity: 0.5 }));
+  m.rotation.x = -Math.PI / 2; m.position.y = 0.35; m.scale.set(w * 1.45, d * 1.45, 1); m.renderOrder = -1; return m;
+};
+
+/* short-lived effects: arrival ripples and failure bursts */
+const fxList = [];
+const rippleGeo = new THREE.RingGeometry(0.78, 1, 40), shardGeo = new THREE.BoxGeometry(2.8, 2.8, 2.8);
+const spawnRipple = (pos, color) => {
+  if (reduce) return;
+  const m = new THREE.Mesh(rippleGeo, new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.8, depthWrite: false, side: THREE.DoubleSide }));
+  m.rotation.x = -Math.PI / 2; m.position.set(pos.x, 1.2, pos.z); scene.add(m);
+  fxList.push({ m, t0: performance.now(), dur: 520, kind: "ripple" });
+};
+const spawnBurst = (pos, color) => {
+  if (reduce) return;
+  for (let i = 0; i < 9; i++) {
+    const a = (i / 9) * Math.PI * 2 + Math.random() * 0.4, sp = 0.05 + Math.random() * 0.05;
+    const m = new THREE.Mesh(shardGeo, new THREE.MeshBasicMaterial({ color, transparent: true, depthWrite: false }));
+    m.position.copy(pos); m.rotation.set(Math.random() * 3, Math.random() * 3, 0); scene.add(m);
+    fxList.push({ m, t0: performance.now(), dur: 620, kind: "shard", v: new THREE.Vector3(Math.cos(a) * sp, 0.09 + Math.random() * 0.05, Math.sin(a) * sp) });
+  }
+};
+const updateFx = (now, dt) => {
+  for (let i = fxList.length - 1; i >= 0; i--) {
+    const f = fxList[i], p = (now - f.t0) / f.dur;
+    if (p >= 1) { scene.remove(f.m); f.m.material.dispose(); fxList.splice(i, 1); continue; }
+    if (f.kind === "ripple") { const r = 8 + p * 22; f.m.scale.set(r, r, 1); f.m.material.opacity = 0.8 * (1 - p); }
+    else { f.v.y -= 0.00032 * dt; f.m.position.addScaledVector(f.v, dt); f.m.position.y = Math.max(0.5, f.m.position.y); f.m.rotation.x += dt * 0.01; f.m.material.opacity = 1 - p * p; f.m.scale.setScalar(1 - p * 0.6); }
+  }
+};
+
 /* ───────── ground tags: status written on the floor in front of units ───────── */
 const tagGeo = new THREE.PlaneGeometry(1, 1);
 const TONE = { "": "--panel", ok: "--accent", warn: "--amber", bad: "--rose", info: "--sky", changed: "--amber" };
-const LEAN = 0.42, TAGK = 0.27;
+const LEAN = 0.32, TAGK = 0.27;
 const allTags = new Set();
 const makeTag = (parent) => {
   const mat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false, depthTest: false });
@@ -161,7 +203,7 @@ const makeTag = (parent) => {
     set(text, tone = "", icon, frac = null) {
       const f = frac == null ? null : Math.round(clamp01(frac) * 40) / 40, key = `${text}|${tone}|${icon}|${f}`;
       T.want = text ? 1 : 0; if (key === T.key) return; T.key = key; T.spec = [text, tone, icon, frac]; if (!text) return;
-      const fs = 50, pad = 30, iconW = icon ? fs + 14 : 0, h = f == null ? 100 : 118, font = `800 ${fs}px "JetBrains Mono", ui-monospace, monospace`;
+      const fs = 50, pad = 30, iconW = icon ? fs + 14 : 0, h = f == null ? 100 : 118, font = `700 ${fs + 4}px ${DISPLAY}`;
       const m = document.createElement("canvas").getContext("2d"); m.font = font;
       const w = Math.min(2048, Math.ceil(m.measureText(text).width + iconW + pad * 2)), ink = css("--ink") || "#1d1b18";
       const tex = canvasTex(w, h, (x) => {
@@ -261,7 +303,8 @@ const buildNode = (n, idx) => {
   } else {
     const b = rbox(s.w, s.h, s.d, Math.min(13, s.h / 3), main, body); b.position.y = s.h / 2; hit.push(b); o.top = s.h;
   }
-  hit.forEach((m) => (m.userData.node = n.id)); o.hit = hit;
+  hit.forEach((m) => (m.userData.node = n.id)); o.hit = hit; o.hov = 0;
+  g.add(blob(s.w, s.d));
   /* pulsing ring for active units, spinner for busy ones */
   o.ringMat = new THREE.MeshBasicMaterial({ color: C("--res"), transparent: true, opacity: 0, depthWrite: false });
   o.ring = new THREE.Mesh(new THREE.RingGeometry(1, 1.07, 72), o.ringMat); o.ring.rotation.x = -Math.PI / 2; o.ring.position.y = 0.6; g.add(o.ring);
@@ -312,7 +355,7 @@ const wantedPipes = (st) => {
 /* ───────── packets & trace ───────── */
 const pktGeo = new THREE.SphereGeometry(5.2, 22, 16), pktHull = new THREE.SphereGeometry(7, 22, 16), shGeo = new THREE.CircleGeometry(6, 20);
 let marks = [];
-const clearPackets = () => { packets.forEach((P) => { scene.remove(P.p, P.sh); P.mat.dispose(); P.hull.material.dispose(); P.sh.material.dispose(); }); packets = []; marks.forEach((m) => m.remove()); marks = []; };
+const clearPackets = () => { packets.forEach((P) => { scene.remove(P.p, P.sh, ...P.trail); P.mat.dispose(); P.hull.material.dispose(); P.sh.material.dispose(); P.trail.forEach((t) => t.material.dispose()); }); packets = []; marks.forEach((m) => m.remove()); marks = []; };
 const genericEvents = (st) => {
   const out = []; let t = 0;
   st.flows.forEach(([f, to, k]) => { if (f === to || !nodes[f] || !nodes[to]) return; out.push(k === "fail" ? { f, t: to, k, at: t, dur: 620, endAt: 0.55, end: "pop", done: "failed / missed" } : { f, t: to, k, at: t, dur: 650 }); t += 430; });
@@ -402,10 +445,11 @@ const setStep = (idx, now = performance.now(), first = false) => {
     const pk = want.find((w) => w.f === e.f && w.t === e.t), L = lineFor(e.f, e.t, pk ? pk.off : 0); if (!L) return null;
     const mat = new THREE.MeshToonMaterial({ color: C(kindVar[e.k]), gradientMap: grad, transparent: true });
     const p = new THREE.Mesh(pktGeo, mat); p.castShadow = true; p.visible = false;
+    const trail = [0.72, 0.52, 0.34].map((sc, i) => { const t = new THREE.Mesh(pktGeo, new THREE.MeshBasicMaterial({ color: C(kindVar[e.k]), transparent: true, opacity: [0.32, 0.2, 0.1][i], depthWrite: false })); t.scale.setScalar(sc); t.visible = false; scene.add(t); return t; });
     const hull = new THREE.Mesh(pktHull, new THREE.MeshBasicMaterial({ color: C("--ink"), side: THREE.BackSide, transparent: true })); p.add(hull); scene.add(p);
     const sh = new THREE.Mesh(shGeo, new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.14, depthWrite: false })); sh.rotation.x = -Math.PI / 2; sh.visible = false; scene.add(sh);
     const xm = document.createElement("div"); xm.className = "s3-x"; xm.innerHTML = svg("x"); xm.style.opacity = 0; ov.append(xm); marks.push(xm);
-    return { e, L, p, mat, hull, sh, xm };
+    return { e, L, p, mat, hull, sh, xm, trail, arrived: false, burst: false };
   }).filter(Boolean);
   buildTrace();
   /* instruments */
@@ -424,7 +468,7 @@ const setStep = (idx, now = performance.now(), first = false) => {
 };
 
 /* ───────── camera ───────── */
-const v3 = new THREE.Vector3(), right = new THREE.Vector3(), front = new THREE.Vector3();
+const v3 = new THREE.Vector3(), right = new THREE.Vector3(), front = new THREE.Vector3(), ac = new THREE.Vector3(), acT = new THREE.Vector3();
 const placeCamera = () => {
   const th = THREE.MathUtils.degToRad(view.tilt), ph = THREE.MathUtils.degToRad(view.spin);
   camera.position.set(Math.sin(th) * Math.sin(ph) * 2400, Math.cos(th) * 2400, Math.sin(th) * Math.cos(ph) * 2400);
@@ -437,6 +481,7 @@ const placeCamera = () => {
   let cy = (y0 + y1) / 2 + hh * (pt - pb);
   if (view.f > 0.001 && view.focus && nodes[view.focus]) { const o = nodes[view.focus]; v3.set(o.g.position.x, o.s.h / 2, o.g.position.z).applyMatrix4(camera.matrixWorldInverse);
     cx += (v3.x - cx) * view.f; cy += (v3.y - cy) * view.f; const k = 1 + view.f * 1.2; hw /= k; hh /= k; }
+  if (!view.focus) { v3.copy(ac).applyMatrix4(camera.matrixWorldInverse); const pull = Math.min(0.35, 0.04 + (view.z - 1) * 0.25) * (1 - view.f); cx += (v3.x - cx) * pull; cy += (v3.y - cy) * pull; }
   hw /= view.z; hh /= view.z;
   Object.assign(camera, { left: cx - hw, right: cx + hw, top: cy + hh, bottom: cy - hh }); camera.updateProjectionMatrix();
 };
@@ -453,14 +498,14 @@ const bindPointer = () => {
     if (drag) { const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
       if (Math.hypot(dx, dy) > 4) { drag.moved = true; fig.classList.add("grab"); tip.classList.remove("show"); }
       if (drag.moved) { view.spin = drag.spin - dx * 0.35; view.tilt = Math.max(25, Math.min(75, drag.tilt - dy * 0.25)); } return; }
-    const id = pick(e); fig.classList.toggle("hover", !!id);
+    const id = pick(e); hoverId = id; fig.classList.toggle("hover", !!id);
     if (id) { const o = nodes[id], r = fig.getBoundingClientRect(); tip.innerHTML = `<b>${esc(o.n.label)}</b>${o.n.info || esc(o.s.desc)}`;
       tip.style.left = Math.max(8, Math.min(r.width - 290, e.clientX - r.left + 14)) + "px"; tip.style.top = (e.clientY - r.top + 16) + "px"; tip.classList.add("show"); }
     else tip.classList.remove("show");
   });
   const endDrag = (e) => { if (drag && !drag.moved && e.type === "pointerup") { const id = pick(e); view.focus = id && id !== view.focus ? id : null; } drag = null; fig.classList.remove("grab"); };
   fig.addEventListener("pointerup", endDrag); fig.addEventListener("pointercancel", endDrag);
-  fig.addEventListener("pointerleave", () => { tip.classList.remove("show"); fig.classList.remove("hover"); });
+  fig.addEventListener("pointerleave", () => { hoverId = null; tip.classList.remove("show"); fig.classList.remove("hover"); });
   fig.addEventListener("dblclick", () => E.resetView());
 };
 q('[data-a="replay"]').onclick = () => E.replay();
@@ -474,15 +519,18 @@ const setPaused = (p) => { paused = p; pauseBtn.innerHTML = svg(p ? "play" : "pa
 setPaused(false);
 
 /* ───────── frame loop ───────── */
-let last = performance.now();
+let last = performance.now(), hoverId = null, onScreen = true;
+if ("IntersectionObserver" in window) new IntersectionObserver((es) => { onScreen = es[0].isIntersecting; }).observe(fig);
 const frame = (now) => {
   raf = running ? requestAnimationFrame(frame) : 0;
   if (!lesson || failed) return;
+  if (!onScreen || document.hidden) { last = now; return; }
   const dt = Math.min(64, now - last); last = now; perf = now;
   const k = 1 - Math.exp(-dt / 140);
   if (intro > 0) intro -= dt; else if (!paused) clock = (clock + dt * (reduce ? 0.6 : 1)) % loopL;
   if (!scrubbing) scrub.value = Math.round((clock / loopL) * 1000);
   view.f += ((view.focus ? 1 : 0) - view.f) * k; view.z += (view.zoom - view.z) * k;
+  { const actv = step.active.map((id) => nodes[id]).filter((o) => o && o.target); acT.set(0, 0, 0); actv.forEach((o) => acT.add(o.g.position)); if (actv.length) acT.divideScalar(actv.length).setY(0); ac.lerp(acT, k * 0.35); }
   placeCamera();
   const ph = THREE.MathUtils.degToRad(view.spin);
   right.set(Math.cos(ph), 0, -Math.sin(ph)); front.set(Math.sin(ph), 0, Math.cos(ph));
@@ -500,12 +548,18 @@ const frame = (now) => {
     o.cur = o.target ? o.from + (1 - o.from) * easeOutBack(p) : o.from * (1 - easeInCubic(p));
     const bp = clamp01((now - o.bounce) / 420), bump = bp > 0 && bp < 1 ? Math.sin(bp * Math.PI) * 0.07 : 0, sc = Math.max(0.001, o.cur);
     o.g.scale.set(sc * (1 + bump * 0.5), sc * (1 + bump), sc * (1 + bump * 0.5)); o.g.visible = o.cur > 0.002;
-    o.g.position.y = o.target ? (1 - clamp01(p * 1.4)) * 55 : 0;
+    o.hov += ((hoverId === o.n.id ? 1 : 0) - o.hov) * k * 1.4;
+    o.g.position.y = (o.target ? (1 - clamp01(p * 1.4)) * 55 : 0) + o.hov * 5;
     o.act += ((act.has(o.n.id) ? 1 : 0) - o.act) * k; o.dim += ((act.size && !act.has(o.n.id) ? 1 : 0) - o.dim) * k;
-    o.mats.forEach(([m, v]) => m.color.copy(C(v)).lerp(bg, o.dim * 0.45));
+    o.mats.forEach(([m, v]) => { m.color.copy(C(v)).lerp(bg, o.dim * 0.45 * (1 - o.hov)); if (m.emissive) m.emissive.copy(m.color).multiplyScalar(0.16 * o.hov); });
     o.ringMat.opacity = o.act * (0.6 + 0.3 * pulse) * clamp01(o.cur); const rs = o.rr * (1 + 0.03 * pulse); o.ring.scale.set(rs, rs, 1);
     const busy = self[o.n.id]; o.spinMat.opacity += ((busy ? 0.85 : 0) - o.spinMat.opacity) * k; if (busy) o.spinMat.color.copy(C(kindVar[busy])); o.spin.rotation.y += reduce ? 0 : dt * 0.0012;
-    if (o.lab) { o.lab.style.opacity = o.cur < 0.7 ? 0 : o.dim > 0.5 ? 0.5 : 1; place(o.lab, v3.set(o.g.position.x, o.s.h * 0.45 * o.cur, o.g.position.z).addScaledVector(front, o.s.d * 0.12)); }
+    if (o.lab) {
+      o.lab.style.opacity = o.cur < 0.7 ? 0 : o.dim > 0.5 && !o.hov ? 0.55 : 1;
+      const px = o.s.w / wpp, lw = Math.round(Math.max(66, Math.min(150, px * 0.95))), fsz = Math.max(10.5, Math.min(14.5, px / 8)).toFixed(1);
+      if (o.labW !== lw || o.labF !== fsz) { o.labW = lw; o.labF = fsz; o.lab.style.width = lw + "px"; o.lab.style.fontSize = fsz + "px"; }
+      place(o.lab, v3.set(o.g.position.x, (o.s.h * 0.5 + o.hov * 5) * o.cur, o.g.position.z).addScaledVector(front, o.s.d * 0.1));
+    }
     /* ground tags in front of the unit */
     const r0 = Math.max(o.s.w, o.s.d) * 0.5 + 24, hasPool = poolState && poolState.id === o.n.id;
     if (o.name) { o.name.holder.position.copy(o.g.position).addScaledVector(front, r0).setY(0); o.name.want = o.cur > 0.5 ? 1 : 0; }
@@ -550,6 +604,10 @@ const frame = (now) => {
     if (vis) { if (local < e.dur) t = easeInOut(local / e.dur) * end; else { t = end; if (local >= holdEnd) pop = (local - holdEnd) / popMs; } }
     const show = vis && !(!e.end && local >= e.dur);
     P.p.visible = P.sh.visible = show;
+    const moving = show && local < e.dur && !reduce;
+    P.trail.forEach((tm, i) => { tm.visible = moving && t > 0.03 * (i + 1); if (tm.visible) { tm.position.copy(P.L.p0).lerp(P.L.p1, Math.max(0, t - 0.028 * (i + 1) * end)); tm.position.y = PY - PR + 6.6; } });
+    if (local < e.dur) P.arrived = false; else if (!e.end && !P.arrived && local < e.dur + 250) { P.arrived = true; spawnRipple(P.L.p1, C(kindVar[e.k])); }
+    if (local < holdEnd) P.burst = false; else if (e.end === "pop" && !P.burst && local < holdEnd + 200) { P.burst = true; const bp = P.L.p0.clone().lerp(P.L.p1, end); bp.y = PY - PR + 6.6; spawnBurst(bp, C(kindVar[e.popKind || "fail"])); }
     const xo = e.end === "pop" && local >= holdEnd && local < holdEnd + 900 ? Math.max(0, 1 - (local - holdEnd) / 900) : 0; P.xm.style.opacity = xo;
     if (!show && !xo) return;
     const pos = P.L.p0.clone().lerp(P.L.p1, t); pos.y = PY - PR + 6.6;
@@ -561,6 +619,7 @@ const frame = (now) => {
     place(P.xm, pos, -16);
   });
 
+  updateFx(now, dt);
   flushMetrics(); flushTrace();
   renderer.render(scene, camera);
 };
@@ -577,7 +636,7 @@ const E = {
   resetView() { Object.assign(view, DEF(), { focus: null, zoom: 1 }); },
   recolor() {
     if (!renderer) return;
-    themed.forEach(([m, v]) => m.color.copy(C(v))); buildGrid();
+    colorCache.clear(); themed.forEach(([m, v]) => m.color.copy(C(v))); buildGrid();
     pipes.forEach((p) => recolorPipe(p, p.k)); packets.forEach((P) => { P.mat.color.copy(C(kindVar[P.e.k])); P.hull.material.color.copy(C("--ink")); });
     allTags.forEach((T) => T.redraw());
   },
