@@ -1,8 +1,8 @@
 # Backend Atlas
 
-Revision site for backend interviews. Every topic is a step-by-step **3D animated walkthrough** (drag to rotate) with deep-dive notes, interview tips and sources.
+Revision site for backend interviews, with a home page, a timed practice mode (`#/practice`) and offline support. Every topic is a step-by-step **3D animated walkthrough** (drag to rotate) with deep-dive notes, interview tips and sources.
 
-- **System Design**: 40 lessons in 9 modules (foundations, scaling, data & storage, communication, reliability, architecture, security, shipping, whole-system designs).
+- **System Design**: 45 lessons in 11 modules (foundations, scaling, data & storage, communication, reliability, architecture, security, shipping, whole-system designs, data-intensive patterns, designs from the field).
 - **Interview Problems**: 27 problems. 14 classics: dual write, duplicate requests, lost update, exactly-once, distributed locks, stale reads, clocks, split brain, thundering herd, hot partitions, retry storms, poison messages, backpressure, pagination. Plus senior (zero-downtime migrations, rollback safety, noisy neighbours, tail latency), team-lead (incidents, canaries and flags, error budgets, strangler migrations) and CTO problems (build vs buy, disaster recovery, cells, Conway's law, cloud costs).
 - **Senior Django**: 30 questions, each with a 3D walkthrough, model answer, code, follow-ups and links to the official docs, plus a Q&A list with filters and a mock-interview drill.
 

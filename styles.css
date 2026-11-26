@@ -409,3 +409,52 @@ ul.deep li { margin-bottom: 6px; }
   .drag-hint { margin-left: 0; }
   .canvas-top .controls .btn { padding: 5px 9px; }
 }
+
+/* ═════════ home, practice, polish ═════════ */
+.s3-metric { max-width: 240px; }
+.s3-metric b { overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 720px) { .s3-metric b { white-space: normal; font-size: 13.5px; } }
+.link-btn { margin-top: 10px; width: 100%; justify-content: center; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; }
+.side-top { display: flex; gap: 6px; margin: 0 2px 14px; }
+.side-top a { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 8px; border: 1.5px solid var(--hair); border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 12px; background: var(--panel); }
+.side-top a.active, .side-top a:hover { border-color: var(--line); box-shadow: 2px 2px 0 var(--line); }
+.muted-s { color: var(--muted); font-size: 12px; }
+.home-hero { padding: 22px 22px 14px; }
+.home-hero h1 { font-size: clamp(26px, 3.4vw, 38px); line-height: 1.08; margin: 10px 0 8px; letter-spacing: -.01em; max-width: 22ch; }
+.home-hero > p { color: var(--ink-2); max-width: 70ch; margin: 0; }
+.home-cta { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 4px; }
+.home-cta .btn { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
+.home-stage .s3-trace { display: none; }
+.home-cap { font-size: 12px; color: var(--muted) !important; margin-top: 8px !important; }
+.home-tracks { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 12px; }
+.home-track { padding: 14px 16px; }
+.ht-head { display: flex; justify-content: space-between; align-items: baseline; }
+.ht-head h2 { font-size: 15px; margin: 0; } .ht-head span { color: var(--muted); font-size: 12px; }
+.home-track ul { list-style: none; margin: 10px 0 0; padding: 0; }
+.home-track li { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 12.5px; }
+.home-track li a { flex: 1; text-decoration: none; } .home-track li a:hover { text-decoration: underline; }
+.home-track li small { color: var(--muted); }
+.home-track .folder { width: 12px; height: 10px; border-radius: 2px; flex: none; }
+.home-big { font-size: 30px; font-weight: 800; margin: 4px 0 6px !important; color: var(--ink) !important; } .home-big small { font-size: 13px; color: var(--muted); font-weight: 400; }
+.pr-card { padding: 18px 20px; }
+.pr-filters { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 14px; }
+.pr-filters select { font: inherit; font-size: 12px; padding: 4px 8px; border: 1.5px solid var(--hair); border-radius: 8px; background: var(--panel); color: var(--ink); }
+.pr-q { font-size: clamp(20px, 2.4vw, 26px); line-height: 1.25; margin: 8px 0 14px; max-width: 46ch; }
+.pr-timer { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 12px; border: 1.5px dashed var(--hair); border-radius: 10px; background: var(--panel-2); }
+.pr-timer #prClock { font-size: 28px; font-weight: 800; font-variant-numeric: tabular-nums; min-width: 92px; }
+.pr-timer #prClock.over { color: var(--fail); }
+.pr-timer .btn { display: inline-flex; align-items: center; gap: 6px; }
+.pr-checks { list-style: none; padding: 0; margin: 0; }
+.pr-checks li { padding: 5px 0; border-bottom: 1px dashed var(--hair); }
+.pr-checks label { display: flex; gap: 8px; align-items: flex-start; cursor: pointer; }
+.pr-checks input { margin-top: 3px; accent-color: var(--res); }
+.pr-grade { display: flex; flex-wrap: wrap; gap: 8px; }
+.pr-grade .btn { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
+.btn.g-good { background: color-mix(in oklab, var(--accent), var(--panel) 30%); }
+.btn.g-partly { background: color-mix(in oklab, var(--amber), var(--panel) 30%); }
+.btn.g-missed { background: color-mix(in oklab, var(--rose), var(--panel) 30%); }
+.pr-grades { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; font-size: 12px; }
+.pr-grades span, small.g-good, small.g-partly, small.g-missed { border: 1px solid var(--hair); border-radius: 999px; padding: 1px 8px; }
+.g-good { background: color-mix(in oklab, var(--accent), var(--panel) 40%); } .g-partly { background: color-mix(in oklab, var(--amber), var(--panel) 40%); } .g-missed { background: color-mix(in oklab, var(--rose), var(--panel) 40%); }
+.how-list { margin: 0 0 12px; padding-left: 18px; color: var(--ink-2); font-size: 12.5px; } .how-list li { margin-bottom: 6px; }
+.panel .btn[href] { display: inline-block; text-decoration: none; }

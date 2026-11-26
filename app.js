@@ -112,6 +112,8 @@
   const parseRoute = () => {
     const parts = location.hash.replace(/^#\/?/, "").split("/").filter(Boolean);
     if (parts[0] === "django") return { name: "django", q: parts[1] === "q" ? parts[2] : null };
+    if (parts[0] === "practice") return { name: "practice" };
+    if (!parts.length || parts[0] === "home") return { name: "home" };
     if (parts[0] === "lesson" && LESSON[parts[1]] && LESSON[parts[1]].track) return { name: "lesson", id: parts[1], step: Number(parts[2]) || 0 };
     return { name: "lesson", id: ORDER[0], step: 0 };
   };
@@ -146,7 +148,8 @@
         }).join("")}
       </div>`;
     }).join(`<hr class="side-divider" />`);
-    $("#sidebar").innerHTML = html + `
+    const top = `<nav class="side-top"><a class="${state.route.name === "home" ? "active" : ""}" href="#/">${ico("home")}Home</a><a class="${state.route.name === "practice" ? "active" : ""}" href="#/practice">${ico("timer")}Practice</a></nav>`;
+    $("#sidebar").innerHTML = top + html + `
       <div class="card progress-card"><div style="flex:1">PROGRESS
         <div class="bar"><i style="width:${(done / ORDER.length) * 100}%"></i></div></div>
         <span style="margin-left:12px">${done} / ${ORDER.length}</span></div>`;
@@ -173,8 +176,8 @@
     stage().attach(slot);
     stage().show(lesson, idx);
   };
-  window.addEventListener("stage3d-ready", () => { if (pendingStage && state.route.name === "lesson") mountStage(...pendingStage); pendingStage = null; });
-  const ICONS = { clock: "M12 2a10 10 0 1 0 0 20a10 10 0 1 0 0-20zM12 6v6l4 2", bars: "M4 20v-2M9 20v-6M14 20v-10M19 20V4", steps: "M9 6h12M9 12h12M9 18h12M4 6h.01M4 12h.01M4 18h.01", copy: "M9 9h11v11H9zM5 15H4V4h11v1", check: "M4 12l5 5L20 6" };
+  window.addEventListener("stage3d-ready", () => { if (pendingStage && (state.route.name === "lesson" || state.route.name === "home")) mountStage(...pendingStage); pendingStage = null; });
+  const ICONS = { clock: "M12 2a10 10 0 1 0 0 20a10 10 0 1 0 0-20zM12 6v6l4 2", bars: "M4 20v-2M9 20v-6M14 20v-10M19 20V4", steps: "M9 6h12M9 12h12M9 18h12M4 6h.01M4 12h.01M4 18h.01", copy: "M9 9h11v11H9zM5 15H4V4h11v1", check: "M4 12l5 5L20 6", link: "M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1", play: "M7 4l13 8-13 8z", timer: "M10 2h4M12 14l3-3M12 6a8 8 0 1 0 0 16a8 8 0 1 0 0-16z", target: "M12 2a10 10 0 1 0 0 20a10 10 0 1 0 0-20zM12 6a6 6 0 1 0 0 12a6 6 0 1 0 0-12zM12 10a2 2 0 1 0 0 4a2 2 0 1 0 0-4z", home: "M3 11l9-8 9 8M5 10v10h14V10" };
   const ico = (n) => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="${ICONS[n]}"/></svg>`;
 
   /* ───────── tiny Python highlighter ───────── */
@@ -233,6 +236,7 @@
     const nextLessonId = ORDER[idxNum + 1];
 
     $("#layout").classList.remove("wide");
+    store.data.last = { id: lesson.id, step: stepIdx }; store.save();
     $("#main").innerHTML = `
       <section class="card stage ${q ? "is-dj" : ""}">
         <div class="crumbs">${esc(lesson.track.title)} / ${esc(lesson.module.title)} / ${lesson.li + 1} of ${lesson.module.lessons.length}</div>
@@ -280,6 +284,7 @@
           <button class="btn btn-primary" id="nextBtn">${nextLabel}</button>
         </div>
         <div class="hint"><kbd>←</kbd><kbd>→</kbd> step · <kbd>Space</kbd> pause · <kbd>R</kbd> replay · <kbd>V</kbd> reset view</div>
+        <button class="btn link-btn" id="copyLink">${ico("link")}Copy link to this step</button>
       </section>
       ${q ? `<section class="card panel">
         <div class="panel-top"><span>SAY IT IN ONE LINE</span></div>
@@ -292,6 +297,7 @@
       </section>`}`;
 
     mountStage(lesson, stepIdx);
+    $("#copyLink").onclick = async (ev) => { const b = ev.currentTarget, url = location.href.split("#")[0] + `#/lesson/${lesson.id}/${stepIdx}`; try { await navigator.clipboard.writeText(url); b.innerHTML = ico("check") + "Link copied"; } catch (_) { b.textContent = url; } };
     const cp = $("#copyCode");
     if (cp) cp.onclick = async () => { try { await navigator.clipboard.writeText(step.code); cp.innerHTML = ico("check") + "Copied"; } catch (_) { cp.textContent = "Select the code to copy"; } };
     $("#backBtn").onclick = () => goStep(stepIdx - 1);
@@ -447,7 +453,8 @@
   const searchIndex = ORDER.map((id) => {
     const l = LESSON[id];
     const qa = l.qa ? " " + l.qa.short + " " + strip(l.qa.a.join(" ")) + " " + (l.qa.code || "") : "";
-    return { title: l.qa ? l.qa.q : l.title, sub: `${l.track.title} · ${l.module.title}`, href: `#/lesson/${id}`, hay: (l.title + " " + l.subtitle + " " + l.steps.map((s) => s.title + " " + strip(s.body.join(" "))).join(" ") + " " + strip(l.deep.join(" ")) + qa).toLowerCase() };
+    const extra = l.steps.map((s) => (s.code || "") + " " + (s.setup || []).flat().join(" ") + " " + (s.note || "")).join(" ") + " " + strip(l.iv.join(" ")) + " " + l.level;
+    return { title: l.qa ? l.qa.q : l.title, sub: `${l.track.title} · ${l.module.title} · ${l.level}`, href: `#/lesson/${id}`, hay: (l.title + " " + l.subtitle + " " + l.steps.map((s) => s.title + " " + strip(s.body.join(" "))).join(" ") + " " + strip(l.deep.join(" ")) + qa + " " + extra).toLowerCase() };
   });
   let searchSel = 0;
   const openSearch = () => { $("#searchModal").hidden = false; $("#searchInput").value = ""; searchSel = 0; runSearch(); $("#searchInput").focus(); };
@@ -486,6 +493,131 @@
   $("#menuBtn").addEventListener("click", () => document.body.classList.toggle("nav-open"));
   $("#scrim").addEventListener("click", () => document.body.classList.remove("nav-open"));
 
+
+  /* ───────── home ───────── */
+  const SHOWCASE = "timeouts-retries";
+  const renderHome = () => {
+    $("#layout").classList.add("wide");
+    const steps = ORDER.reduce((a, id) => a + LESSON[id].steps.length, 0);
+    const last = store.data.last && LESSON[store.data.last.id] ? store.data.last : null;
+    const done = ORDER.filter(isDone).length;
+    $("#main").innerHTML = `
+      <section class="card home-hero">
+        <span class="badge b-violet">${ico("target")}Backend interview prep · system design · Django</span>
+        <h1>Learn backend systems by watching them run.</h1>
+        <p>${ORDER.length} animated 3D walkthroughs and ${steps} steps, from how a request travels to what a CTO weighs when a region goes down. Every lesson shows the traffic, the numbers, the trace and the code.</p>
+        <div class="home-cta">
+          <a class="btn btn-primary" href="#/lesson/${last ? `${last.id}/${last.step}` : ORDER[0]}">${ico("play")}${last ? `Continue: ${esc(LESSON[last.id].title)}` : "Start with lesson 1"}</a>
+          <a class="btn" href="#/practice">${ico("timer")}Practice an interview</a>
+          <a class="btn" href="#/django">Django Q&amp;A</a>
+        </div>
+        <div id="stageSlot" class="stage-slot home-stage"></div>
+        <p class="home-cap">Live: the circuit-breaker step of <a href="#/lesson/${SHOWCASE}/3">Timeouts &amp; Retries</a>. Drag to rotate, hover a unit.</p>
+      </section>
+      <section class="home-tracks">
+        ${TRACKS.map((t) => { const ids = t.modules.flatMap((m) => m.lessons); const d = ids.filter(isDone).length; return `
+          <div class="card home-track">
+            <div class="ht-head"><h2>${esc(t.title)}</h2><span>${d} / ${ids.length}</span></div>
+            <div class="bar"><i style="width:${(d / Math.max(1, ids.length)) * 100}%"></i></div>
+            <ul>${t.modules.map((m) => `<li><span class="folder" style="background:${m.color}"></span><a href="#/lesson/${m.lessons[0]}">${esc(m.title)}</a><small>${m.lessons.length}</small></li>`).join("")}</ul>
+          </div>`; }).join("")}
+      </section>`;
+    $("#aside").innerHTML = `
+      <section class="card panel">
+        <div class="panel-top"><span>YOUR PROGRESS</span></div>
+        <p class="home-big">${done}<small> / ${ORDER.length} lessons</small></p>
+        <div class="bar"><i style="width:${(done / ORDER.length) * 100}%"></i></div>
+        ${practiceSummary()}
+      </section>
+      <section class="card panel">
+        <div class="panel-top"><span>HOW TO USE IT</span></div>
+        <ol class="how-list"><li>Watch a walkthrough step by step with the arrow keys.</li><li>Read the trace and the code for each step.</li><li>Answer it out loud in practice mode, then grade yourself.</li></ol><a class="btn" href="#/practice">Open practice mode</a>
+      </section>`;
+    const l = LESSON[SHOWCASE];
+    if (l) mountStage(l, 3);
+  };
+
+  /* ───────── practice mode ───────── */
+  const LEVELS = ["Beginner", "Intermediate", "Advanced", "Senior", "Staff", "Lead", "CTO"];
+  const pr = { level: "all", track: "all", minutes: 5, id: null, phase: "ready", t0: 0, timer: 0, checks: new Set() };
+  store.data.practice = store.data.practice || {};
+  const practicePool = () => ORDER.filter((id) => { const l = LESSON[id]; return (pr.level === "all" || l.level === pr.level) && (pr.track === "all" || l.track.id === pr.track); });
+  const pickPractice = () => {
+    const pool = practicePool(); if (!pool.length) { pr.id = null; return; }
+    const P = store.data.practice, unseen = pool.filter((id) => !P[id] && id !== pr.id), weak = pool.filter((id) => P[id] && P[id].grade !== "good" && id !== pr.id);
+    const from = unseen.length && Math.random() < 0.7 ? unseen : weak.length ? weak : pool.filter((id) => id !== pr.id).length ? pool.filter((id) => id !== pr.id) : pool;
+    pr.id = from[Math.floor(Math.random() * from.length)]; pr.phase = "ready"; pr.checks = new Set();
+  };
+  const promptFor = (l) => l.qa ? l.qa.q : l.track.id === "ip" ? `${l.subtitle} Walk me through how you'd handle it.` : `Explain ${l.title.toLowerCase()}: ${l.subtitle}`;
+  const checklistFor = (l) => { const keys = l.steps.map((s) => s.key).filter(Boolean); return [...new Set([...(l.learn.length ? l.learn : []), ...keys])].slice(0, 8); };
+  const practiceSummary = () => {
+    const P = store.data.practice, vals = Object.entries(P);
+    if (!vals.length) return `<p class="muted-s">No practice answers yet. <a href="#/practice">Try one</a>.</p>`;
+    const c = { good: 0, partly: 0, missed: 0 }; vals.forEach(([, v]) => (c[v.grade] = (c[v.grade] || 0) + 1));
+    return `<div class="pr-grades"><span class="g-good">${c.good} nailed</span><span class="g-partly">${c.partly} partly</span><span class="g-missed">${c.missed} missed</span></div>`;
+  };
+  const fmt = (ms) => { const s = Math.max(0, Math.ceil(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; };
+  const renderPractice = () => {
+    stage()?.detach(); clearInterval(pr.timer);
+    $("#layout").classList.add("wide");
+    if (!pr.id || !LESSON[pr.id] || !practicePool().includes(pr.id)) pickPractice();
+    const l = pr.id && LESSON[pr.id];
+    const tracks = TRACKS.map((t) => `<option value="${t.id}" ${pr.track === t.id ? "selected" : ""}>${esc(t.title)}</option>`).join("");
+    const levels = LEVELS.filter((lv) => ORDER.some((id) => LESSON[id].level === lv)).map((lv) => `<button class="chip ${pr.level === lv ? "on" : ""}" data-lv="${lv}">${lv}</button>`).join("");
+    const list = l ? checklistFor(l) : [];
+    $("#main").innerHTML = `
+      <section class="card pr-card">
+        <div class="pr-filters"><button class="chip ${pr.level === "all" ? "on" : ""}" data-lv="all">All levels</button>${levels}
+          <select id="prTrack" aria-label="Track"><option value="all">All tracks</option>${tracks}</select>
+          <select id="prMin" aria-label="Time limit">${[3, 5, 10, 20].map((m) => `<option value="${m}" ${pr.minutes === m ? "selected" : ""}>${m} min</option>`).join("")}</select></div>
+        ${l ? `
+        <div class="crumbs">${esc(l.track.title)} / ${esc(l.module.title)} · <span class="badge">${esc(l.level)}</span></div>
+        <h1 class="pr-q">${esc(promptFor(l))}</h1>
+        <div class="pr-timer ${pr.phase}"><span id="prClock">${pr.phase === "review" ? fmt(pr.elapsed) : fmt(pr.minutes * 60000)}</span>${pr.phase === "review" ? `<span class="muted-s">your answer took ${fmt(pr.elapsed)} of ${pr.minutes}:00</span>` : ""}
+          ${pr.phase === "ready" ? `<button class="btn btn-primary" id="prStart">${ico("timer")}Start answering out loud</button>` : ""}
+          ${pr.phase === "answer" ? `<button class="btn btn-primary" id="prReveal">I'm done: show the checklist</button>` : ""}
+          <button class="btn" id="prSkip">Skip</button></div>
+        ${pr.phase === "review" ? `
+          <div class="sec">DID YOU COVER…</div>
+          <ul class="pr-checks">${list.map((x, i) => `<li><label><input type="checkbox" data-ci="${i}" ${pr.checks.has(i) ? "checked" : ""}> ${esc(x)}</label></li>`).join("")}</ul>
+          ${l.qa ? `<div class="key-idea"><small>ONE-LINE ANSWER</small>${esc(l.qa.short)}</div>` : ""}
+          ${l.iv.length ? `<div class="sec">WHAT INTERVIEWERS LISTEN FOR</div><ul class="deep">${l.iv.map((x) => `<li>${x}</li>`).join("")}</ul>` : ""}
+          <div class="sec">GRADE YOURSELF</div>
+          <div class="pr-grade"><button class="btn g-good" data-g="good">${ico("check")}Nailed it</button><button class="btn g-partly" data-g="partly">Partly</button><button class="btn g-missed" data-g="missed">Missed it</button>
+            <a class="btn" href="#/lesson/${l.id}">${ico("play")}Watch the walkthrough</a></div>` : `<p class="muted-s">Answer as if you were in the interview: say it out loud, draw it on paper, and mention trade-offs. Then compare against the checklist.</p>`}
+        ` : `<p>No lessons match these filters.</p>`}
+      </section>`;
+    $("#aside").innerHTML = practiceAside();
+    $$("[data-lv]").forEach((b) => (b.onclick = () => { pr.level = b.dataset.lv; pr.id = null; renderPractice(); }));
+    $("#prTrack").onchange = (e) => { pr.track = e.target.value; pr.id = null; renderPractice(); };
+    $("#prMin").onchange = (e) => { pr.minutes = Number(e.target.value); renderPractice(); };
+    $("#prSkip")?.addEventListener("click", () => { pickPractice(); renderPractice(); });
+    $("#prStart")?.addEventListener("click", () => { pr.phase = "answer"; pr.t0 = Date.now(); renderPractice(); });
+    $("#prReveal")?.addEventListener("click", () => { pr.phase = "review"; pr.elapsed = Date.now() - pr.t0; renderPractice(); });
+    $$("[data-ci]").forEach((c) => (c.onchange = () => { const i = Number(c.dataset.ci); c.checked ? pr.checks.add(i) : pr.checks.delete(i); }));
+    $$("[data-g]").forEach((b) => (b.onclick = () => { store.data.practice[pr.id] = { grade: b.dataset.g, at: Date.now(), covered: list.length ? pr.checks.size / list.length : 0 }; store.save(); pickPractice(); renderPractice(); }));
+    if (pr.phase === "answer") {
+      const tick = () => { if (state.route.name !== "practice") return clearInterval(pr.timer); const left = pr.minutes * 60000 - (Date.now() - pr.t0); const el = $("#prClock"); if (el) { el.textContent = left > 0 ? fmt(left) : "time"; el.classList.toggle("over", left <= 0); } };
+      tick(); pr.timer = setInterval(tick, 250);
+    }
+  };
+  const practiceAside = () => {
+    const P = store.data.practice, rows = Object.entries(P).filter(([id]) => LESSON[id]);
+    const weak = rows.filter(([, v]) => v.grade !== "good").sort((a, b) => b[1].at - a[1].at).slice(0, 8);
+    const byLevel = LEVELS.map((lv) => { const ids = ORDER.filter((id) => LESSON[id].level === lv); if (!ids.length) return ""; const g = ids.filter((id) => P[id]?.grade === "good").length; return `<div>${lv} <span style="float:right;color:var(--muted)">${g}/${ids.length}</span><div class="bar"><i style="width:${(g / ids.length) * 100}%"></i></div></div>`; }).join("");
+    return `<section class="card panel"><div class="panel-top"><span>YOUR PRACTICE</span></div>${practiceSummary()}
+        <div class="panel-top" style="margin-top:14px"><span>NAILED, BY LEVEL</span></div><div class="cat-bars">${byLevel}</div></section>
+      <section class="card panel"><div class="panel-top"><span>REVISIT THESE</span></div>
+        ${weak.length ? `<ul class="learn-list">${weak.map(([id, v]) => `<li><a href="#/lesson/${id}">${esc(LESSON[id].title)}</a> <small class="g-${v.grade}">${v.grade}</small></li>`).join("")}</ul>` : `<p class="muted-s">Topics you grade "partly" or "missed" show up here.</p>`}
+        ${rows.length ? `<button class="btn" id="prReset">Reset practice history</button>` : ""}</section>`;
+  };
+  document.addEventListener("click", (e) => { if (e.target.id === "prReset" && confirmReset()) { store.data.practice = {}; store.save(); renderPractice(); } });
+  let resetArmed = 0;
+  const confirmReset = () => { const b = $("#prReset"); if (Date.now() - resetArmed < 4000) return true; resetArmed = Date.now(); if (b) b.textContent = "Click again to reset"; return false; };
+
+  /* ───────── offline support ───────── */
+  if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
+
   /* ───────── router ───────── */
   const render = () => {
     const r = parseRoute();
@@ -496,6 +628,12 @@
       renderSidebar();
       renderLesson();
       document.title = `${LESSON[r.id].title} · Backend Atlas`;
+    } else if (r.name === "home") {
+      renderSidebar(); renderHome();
+      document.title = "Backend Atlas · 3D backend interview prep";
+    } else if (r.name === "practice") {
+      renderSidebar(); renderPractice();
+      document.title = "Practice · Backend Atlas";
     } else {
       renderSidebar();
       renderDjango();
