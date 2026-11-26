@@ -40,6 +40,7 @@
     active: words(s.a ?? s.active ?? []),
     show: s.v || s.show ? words(s.v || s.show) : null,
     metrics: s.m || s.metrics || {},
+    ev: s.ev, fx: s.fx, L: s.L, gate: s.gate, g: s.g, setup: s.setup, code: s.code, note: s.note,
   });
   const normLesson = (l, extra = {}) => ({
     id: l.id,
@@ -53,6 +54,7 @@
     refs: l.refs || [],
     metricKeys: l.mk || l.metricKeys || [],
     nodes: l.nodes.map((n) => ({ ...n, kind: n.kind || guessKind(n.id) })),
+    code: l.code || null,
     steps: l.steps.map(normStep),
     ...extra,
   });
@@ -94,16 +96,13 @@
   applyTheme();
   $("#themeBtn").addEventListener("click", () => {
     store.data.theme = store.data.theme === "dark" ? "light" : "dark";
-    store.save(); applyTheme();
+    store.save(); applyTheme(); window.Stage3D?.recolor();
   });
 
   /* ───────── state ───────── */
-  const DEFAULT_VIEW = { spin: -38, tilt: 56 };
   const state = {
     route: { name: null },
     step: 0,
-    paused: false,
-    view: { ...DEFAULT_VIEW },
     dj: { cat: "all", level: "all", status: "all", text: "" },
     openQ: new Set(),
     drillId: null,
@@ -163,146 +162,20 @@
     if (act && act.scrollIntoViewIfNeeded) act.scrollIntoViewIfNeeded(false);
   };
 
-  /* ───────── 3D stage ───────── */
-  const KIND = {
-    client: { w: 104, d: 72, h: 12, icon: "", laptop: true },
-    user: { w: 64, d: 64, h: 26, icon: "☺" },
-    server: { w: 96, d: 84, h: 66, icon: "▤", rack: true },
-    worker: { w: 86, d: 76, h: 52, icon: "⚙", rack: true },
-    db: { w: 92, d: 92, h: 58, icon: "◫", disks: true },
-    cache: { w: 86, d: 86, h: 36, icon: "⚡" },
-    queue: { w: 150, d: 60, h: 26, icon: "≡", slots: true },
-    lb: { w: 106, d: 80, h: 28, icon: "⇄" },
-    edge: { w: 86, d: 86, h: 44, icon: "◇" },
-    ext: { w: 90, d: 82, h: 40, icon: "☁" },
+  /* ───────── 3D stage (engine3d.js, loaded as a module) ───────── */
+  const stage = () => window.Stage3D;
+  let pendingStage = null;
+  const mountStage = (lesson, idx) => {
+    const slot = $("#stageSlot");
+    if (!slot) return;
+    if (!stage()) { pendingStage = [lesson, idx]; slot.innerHTML = `<div class="stage-loading">Loading 3D scene…</div>`; return; }
+    slot.innerHTML = "";
+    stage().attach(slot);
+    stage().show(lesson, idx);
   };
-  const spec = (n) => KIND[n.kind] || KIND.server;
-
-  const quad = (g, t) => {
-    const u = 1 - t;
-    return { x: u * u * g.x0 + 2 * u * t * g.cx + t * t * g.x1, y: u * u * g.y0 + 2 * u * t * g.cy + t * t * g.y1 };
-  };
-
-  const flowGeometry = (lesson, step) => {
-    const byId = Object.fromEntries(lesson.nodes.map((n) => [n.id, n]));
-    const pairCount = {};
-    return step.flows.map(([from, to, kind], i) => {
-      const a = byId[from], b = byId[to];
-      if (!a || !b || from === to) return null;
-      const key = [from, to].sort().join("|");
-      pairCount[key] = (pairCount[key] || 0) + 1;
-      const reverse = step.flows.some(([f, t]) => f === to && t === from);
-      const dir = from < to ? 1 : -1;
-      const bend = (reverse || pairCount[key] > 1 ? 30 : 10) * dir + (pairCount[key] - 1) * 22;
-      const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
-      const ux = dx / len, uy = dy / len;
-      const trim = (n) => { const s = spec(n); return Math.min(Math.abs((s.w / 2 + 10) / (ux || 1e-9)), Math.abs((s.d / 2 + 10) / (uy || 1e-9))); };
-      const ta = trim(a), tb = trim(b);
-      const x0 = a.x + ux * ta, y0 = a.y + uy * ta, x1 = b.x - ux * tb, y1 = b.y - uy * tb;
-      const cx = (x0 + x1) / 2 - uy * bend, cy = (y0 + y1) / 2 + ux * bend;
-      return { i, kind, x0, y0, x1, y1, cx, cy, ha: spec(a).h, hb: spec(b).h };
-    }).filter(Boolean);
-  };
-
-  const renderStage = (lesson, step) => {
-    const show = new Set(step.show || lesson.nodes.map((n) => n.id));
-    const active = new Set(step.active);
-    const self = {};
-    step.flows.forEach(([a, b, k]) => { if (a === b) self[a] = k; });
-    const geo = flowGeometry(lesson, step);
-
-    const wires = geo.map((g) => `<path class="wire ${g.kind}" d="M${g.x0.toFixed(1)},${g.y0.toFixed(1)} Q${g.cx.toFixed(1)},${g.cy.toFixed(1)} ${g.x1.toFixed(1)},${g.y1.toFixed(1)}"/>`).join("");
-    const failMarks = geo.filter((g) => g.kind === "fail").map((g) => {
-      const p = quad(g, 0.5);
-      return `<div class="bb fail-mark" style="left:${p.x}px;top:${p.y}px;--z:34px">✕</div>`;
-    }).join("");
-
-    const boxes = lesson.nodes.map((n) => {
-      const s = spec(n);
-      const cls = ["box", "k-" + n.kind, show.has(n.id) ? "" : "hidden", active.size && !active.has(n.id) ? "dim" : "", active.has(n.id) ? "active" : "", self[n.id] ? "busy busy-" + self[n.id] : ""].join(" ");
-      const extra = s.laptop ? `<div class="face screen"></div>` : "";
-      return `<div class="${cls}" style="left:${n.x - s.w / 2}px;top:${n.y - s.d / 2}px;width:${s.w}px;height:${s.d}px;--h:${s.h}px">
-        <div class="ring"></div>
-        <div class="face s"></div><div class="face e"></div><div class="face n"></div><div class="face w"></div>
-        <div class="face top"><span class="ico">${s.icon}</span></div>
-        ${extra}
-        <div class="bb label" style="left:50%;top:50%;--z:calc(var(--h) + ${s.laptop ? 50 : 6}px)"><b>${esc(n.label)}</b></div>
-      </div>`;
-    }).join("");
-
-    const pkts = geo.map((g) => `<div class="pkt-shadow" data-i="${g.i}"></div><div class="pkt ${g.kind}" data-i="${g.i}"></div>`).join("");
-
-    return `<div class="stage3d ${state.paused ? "paused" : ""}" id="stage3d" tabindex="0" aria-label="3D diagram: ${esc(step.title)}. Drag to rotate.">
-      <div class="cam" id="cam"><div class="world" id="world" style="--spin:${state.view.spin}deg;--tilt:${state.view.tilt}deg">
-        <div class="floor"><div class="floor-top"></div><div class="fs fs-n"></div><div class="fs fs-s"></div><div class="fs fs-e"></div><div class="fs fs-w"></div></div>
-        <svg class="wires" viewBox="0 0 800 440" width="800" height="440">${wires}</svg>
-        ${boxes}
-        ${failMarks}
-        <div class="pkts">${pkts}</div>
-      </div></div>
-    </div>`;
-  };
-
-  /* packets: animated with rAF so they can arc in 3D and pause/replay */
-  const anim = { raf: 0, clock: 0, last: 0, geo: [] };
-  const startPackets = (lesson, step) => {
-    cancelAnimationFrame(anim.raf);
-    anim.geo = flowGeometry(lesson, step);
-    anim.clock = 0; anim.last = performance.now();
-    const pk = $$(".pkt"), sh = $$(".pkt-shadow");
-    const bill = "rotateZ(calc(-1 * var(--spin))) rotateX(calc(-1 * var(--tilt)))";
-    const frame = (now) => {
-      const dt = Math.min(64, now - anim.last); anim.last = now;
-      if (!state.paused) anim.clock += dt;
-      anim.geo.forEach((g, k) => {
-        const u = ((anim.clock / 1700) + g.i * 0.29) % 1;
-        let t = u, op = 1;
-        if (g.kind === "fail") { t = Math.min(u / 0.6, 1) * 0.5; op = u < 0.6 ? 1 : Math.max(0, 1 - (u - 0.6) / 0.25); }
-        const p = quad(g, t);
-        const z = (g.ha * 0.7) * (1 - t) + (g.hb * 0.7) * t + Math.sin(Math.PI * t) * 46;
-        if (pk[k]) { pk[k].style.transform = `translate3d(${p.x}px,${p.y}px,${z}px) ${bill}`; pk[k].style.opacity = op; }
-        if (sh[k]) { sh[k].style.transform = `translate3d(${p.x}px,${p.y}px,1px)`; sh[k].style.opacity = op * 0.35; }
-      });
-      anim.raf = requestAnimationFrame(frame);
-    };
-    anim.raf = requestAnimationFrame(frame);
-  };
-
-  const fitStage = () => {
-    const st = $("#stage3d");
-    if (!st) return;
-    const w = st.clientWidth;
-    const s = Math.max(0.3, Math.min(1.05, w / 1060));
-    st.style.setProperty("--s", s.toFixed(3));
-    st.style.height = Math.round(Math.max(250, 540 * s)) + "px";
-  };
-  window.addEventListener("resize", fitStage);
-
-  const setView = () => {
-    const world = $("#world");
-    if (!world) return;
-    world.style.setProperty("--spin", state.view.spin + "deg");
-    world.style.setProperty("--tilt", state.view.tilt + "deg");
-  };
-  const bindDrag = () => {
-    const st = $("#stage3d");
-    let drag = null;
-    st.addEventListener("pointerdown", (e) => { drag = { x: e.clientX, y: e.clientY, ...state.view }; st.setPointerCapture(e.pointerId); st.classList.add("grabbing"); });
-    st.addEventListener("pointermove", (e) => {
-      if (!drag) return;
-      state.view.spin = drag.spin + (e.clientX - drag.x) * 0.35;
-      state.view.tilt = Math.max(22, Math.min(78, drag.tilt - (e.clientY - drag.y) * 0.25));
-      setView();
-    });
-    const end = () => { drag = null; st.classList.remove("grabbing"); };
-    st.addEventListener("pointerup", end);
-    st.addEventListener("pointercancel", end);
-    st.addEventListener("dblclick", () => { state.view = { ...DEFAULT_VIEW }; setView(); });
-    st.addEventListener("keydown", (e) => {
-      if (e.key === "a") { state.view.spin -= 8; setView(); }
-      if (e.key === "d") { state.view.spin += 8; setView(); }
-    });
-  };
+  window.addEventListener("stage3d-ready", () => { if (pendingStage && state.route.name === "lesson") mountStage(...pendingStage); pendingStage = null; });
+  const ICONS = { clock: "M12 2a10 10 0 1 0 0 20a10 10 0 1 0 0-20zM12 6v6l4 2", bars: "M4 20v-2M9 20v-6M14 20v-10M19 20V4", steps: "M9 6h12M9 12h12M9 18h12M4 6h.01M4 12h.01M4 18h.01", copy: "M9 9h11v11H9zM5 15H4V4h11v1", check: "M4 12l5 5L20 6" };
+  const ico = (n) => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="${ICONS[n]}"/></svg>`;
 
   /* ───────── tiny Python highlighter ───────── */
   const KW = /^(def|class|return|from|import|with|for|in|if|else|elif|async|await|None|True|False|try|except|raise|as|not|and|or|lambda|yield|pass|is)$/;
@@ -354,11 +227,6 @@
     if (last && !isDone(lesson.id)) { store.data.lessons[lesson.id] = true; store.save(); renderSidebar(); }
 
     const levelClass = { Beginner: "b-green", Intermediate: "b-sky", Advanced: "b-rose", Senior: "b-sky", Staff: "b-violet" }[lesson.level] || "b-green";
-    const metrics = lesson.metricKeys.map((k) => {
-      const v = step.metrics[k];
-      const changed = v && (!prev || prev.metrics[k] !== v);
-      return `<div class="metric ${changed ? "changed" : ""}"><small>${esc(k)}</small><b>${v ? esc(v) : "—"}</b></div>`;
-    }).join("");
     const q = lesson.qa;
     const idxNum = ORDER.indexOf(lesson.id);
     const next = lesson.steps[stepIdx + 1];
@@ -371,25 +239,14 @@
         <div class="title-row">
           <h1>${esc(lesson.title)}</h1>
           <div class="badges">
-            <span class="badge b-amber">◷ ${lesson.minutes} min</span>
-            <span class="badge ${levelClass}">${esc(lesson.level)}</span>
-            <span class="badge b-violet">${lesson.steps.length} steps</span>
+            <span class="badge b-amber">${ico("clock")}${lesson.minutes} min</span>
+            <span class="badge ${levelClass}">${ico("bars")}${esc(lesson.level)}</span>
+            <span class="badge b-violet">${ico("steps")}${lesson.steps.length} steps</span>
             ${q ? `<span class="badge b-dj">Django</span>` : ""}
           </div>
         </div>
         <p class="subtitle">${q ? `<span class="q-label">Interview question</span> ` : ""}${esc(lesson.subtitle)}</p>
-        <div class="canvas3d">
-          <div class="canvas-top">
-            <div class="metrics">${metrics}</div>
-            <div class="controls">
-              <button class="btn" id="replayBtn" title="Replay (R)">↻ Replay</button>
-              <button class="btn" id="pauseBtn" title="Pause (Space)">${state.paused ? "▶ Play" : "❚❚ Pause"}</button>
-              <button class="btn" id="viewBtn" title="Reset camera">⌖ View</button>
-            </div>
-          </div>
-          ${renderStage(lesson, step)}
-          <div class="legend"><span><i style="background:var(--req)"></i>request</span><span><i style="background:var(--res)"></i>response</span><span><i style="background:var(--sync)"></i>sync / replication</span><span><i style="background:var(--fail)"></i>failure / miss</span><span class="drag-hint">⟲ drag to rotate · double-click to reset</span></div>
-        </div>
+        <div id="stageSlot" class="stage-slot"></div>
         <div class="card steps-card">
           <div class="steps-head">IN THIS ${q ? "WALKTHROUGH" : "LESSON"} <span>Step ${stepIdx + 1} of ${lesson.steps.length}</span></div>
           <div class="step-strip">
@@ -416,11 +273,13 @@
         <h2>${esc(step.title)}</h2>
         ${step.body.map((p) => `<p>${p}</p>`).join("")}
         ${step.key ? `<div class="key-idea"><small>KEY IDEA</small>${esc(step.key)}</div>` : ""}
+        ${step.setup ? `<div class="sec">THE SETUP</div><div class="setup">${step.setup.map(([k, v, c]) => `<div class="${c || ""}"><span>${esc(k)}</span><span>${esc(v)}</span></div>`).join("")}</div>` : ""}
+        ${step.code ? `<div class="sec">IN CODE <button class="btn copy" id="copyCode">${ico("copy")}Copy</button></div><pre class="code"><code>${highlight(step.code)}</code></pre>${step.note ? `<p class="code-note">${esc(step.note)}</p>` : ""}` : ""}
         <div class="nav-row">
           <button class="btn" id="backBtn" ${stepIdx === 0 ? "disabled" : ""}>← Back</button>
           <button class="btn btn-primary" id="nextBtn">${nextLabel}</button>
         </div>
-        <div class="hint"><kbd>←</kbd><kbd>→</kbd> step · <kbd>R</kbd> replay · <kbd>Space</kbd> pause</div>
+        <div class="hint"><kbd>←</kbd><kbd>→</kbd> step · <kbd>Space</kbd> pause · <kbd>R</kbd> replay · <kbd>V</kbd> reset view</div>
       </section>
       ${q ? `<section class="card panel">
         <div class="panel-top"><span>SAY IT IN ONE LINE</span></div>
@@ -432,12 +291,9 @@
         <ul class="learn-list">${lesson.learn.map((t, i) => `<li class="${(i + 1) / lesson.learn.length <= (stepIdx + 1) / lesson.steps.length ? "got" : ""}">${esc(t)}</li>`).join("")}</ul>
       </section>`}`;
 
-    fitStage();
-    bindDrag();
-    startPackets(lesson, step);
-    $("#replayBtn").onclick = () => { anim.clock = 0; };
-    $("#pauseBtn").onclick = togglePause;
-    $("#viewBtn").onclick = () => { state.view = { ...DEFAULT_VIEW }; setView(); };
+    mountStage(lesson, stepIdx);
+    const cp = $("#copyCode");
+    if (cp) cp.onclick = async () => { try { await navigator.clipboard.writeText(step.code); cp.innerHTML = ico("check") + "Copied"; } catch (_) { cp.textContent = "Select the code to copy"; } };
     $("#backBtn").onclick = () => goStep(stepIdx - 1);
     $("#nextBtn").onclick = () => {
       if (next) goStep(stepIdx + 1);
@@ -454,12 +310,7 @@
     renderLesson();
   };
 
-  const togglePause = () => {
-    state.paused = !state.paused;
-    $("#stage3d")?.classList.toggle("paused", state.paused);
-    const b = $("#pauseBtn");
-    if (b) b.textContent = state.paused ? "▶ Play" : "❚❚ Pause";
-  };
+  const togglePause = () => stage()?.togglePause();
 
   /* ───────── Django Q&A list ───────── */
   const qNumber = (q) => QS.indexOf(q) + 1;
@@ -480,7 +331,7 @@
   };
 
   const renderDjango = () => {
-    cancelAnimationFrame(anim.raf);
+    stage()?.detach();
     $("#layout").classList.add("wide");
     const firstDj = ORDER.find((id) => id.startsWith("dj-"));
     $("#main").innerHTML = `
@@ -628,8 +479,9 @@
     if (state.route.name !== "lesson") return;
     if (e.key === "ArrowRight") goStep(state.step + 1);
     else if (e.key === "ArrowLeft") goStep(state.step - 1);
-    else if (e.key.toLowerCase() === "r") anim.clock = 0;
-    else if (e.key === " ") { e.preventDefault(); togglePause(); }
+    else if (e.key.toLowerCase() === "r") stage()?.replay();
+    else if (e.key.toLowerCase() === "v") stage()?.resetView();
+    else if (e.key === " " && !e.target.matches("button, a")) { e.preventDefault(); togglePause(); }
   });
   $("#menuBtn").addEventListener("click", () => document.body.classList.toggle("nav-open"));
   $("#scrim").addEventListener("click", () => document.body.classList.remove("nav-open"));

@@ -6,11 +6,15 @@ Revision site for backend interviews. Every topic is a step-by-step **3D animate
 - **Interview Problems**: 14 classic problems: dual write, duplicate requests, lost update, exactly-once, distributed locks, stale reads, clocks, split brain, thundering herd, hot partitions, retry storms, poison messages, backpressure, pagination.
 - **Senior Django**: 30 questions, each with a 3D walkthrough, model answer, code, follow-ups and links to the official docs, plus a Q&A list with filters and a mock-interview drill.
 
-No build step. Open `index.html` or serve the folder:
+No build step, but the 3D engine is an ES module, so serve the folder rather than opening `index.html` from disk:
 
 ```bash
 python3 -m http.server 8000
 ```
+
+## 3D engine
+
+`engine3d.js` renders every walkthrough with [three.js](https://threejs.org) (vendored in `vendor/`, MIT). Units are drawn from their `kind`, connections become pipes, and each step's flows play as packets in order, with a trace underneath. Steps can opt into richer scenes: custom event timelines (`ev`), live instruments through an `fx(t, S)` function (metrics, ground tags, a worker pool, countdown rings, a circuit-breaker gate), plus `setup`, `code` and `note` for the side panel. `data/dsl.js` documents the fields; `timeouts-retries` in `data/sd-comm-reliability.js` uses all of them.
 
 ## Adding content
 
