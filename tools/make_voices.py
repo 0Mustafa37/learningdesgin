@@ -138,11 +138,46 @@ def tts(text, lang, key, model, voice):
 EDGE_DEFAULT = {"en": "en-US-AndrewMultilingualNeural", "ar": "ar-EG-ShakirNeural"}
 
 
+def speakable(text):
+    return re.sub(r"\s+", " ", text.replace("…", ", ").replace("→", " ثم " if re.search("[\u0600-\u06FF]", text) else " then ").replace("“", "").replace("”", "").replace('"', "")).strip()
+
+
+def chunks(text, limit=420):
+    """Sentence groups under ~420 characters: short requests are far more reliable on the Edge voice service."""
+    out, cur = [], ""
+    for sent in re.findall(r"[^.!?؟]+[.!?؟]*", text):
+        sent = sent.strip()
+        if not sent:
+            continue
+        if cur and len(cur) + len(sent) > limit:
+            out.append(cur)
+            cur = sent
+        else:
+            cur = f"{cur} {sent}".strip()
+    return out + ([cur] if cur else [])
+
+
 def edge_tts_file(text, voice, path):
     """Microsoft neural voices (the 'Read aloud' voices in Edge). No key and no daily quota; ar-EG voices speak Egyptian."""
-    import asyncio, edge_tts
+    import asyncio, edge_tts, tempfile
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    asyncio.run(edge_tts.Communicate(text, voice, rate="-4%").save(path))
+    parts = []
+    with tempfile.TemporaryDirectory() as tmp:
+        for i, c in enumerate(chunks(speakable(text))):
+            part = os.path.join(tmp, f"{i}.mp3")
+            for attempt in range(5):
+                try:
+                    asyncio.run(edge_tts.Communicate(c, voice, rate="-4%", connect_timeout=15, receive_timeout=45).save(part))
+                    if os.path.getsize(part) > 1000:
+                        break
+                except Exception as e:  # NoAudioReceived, timeouts, dropped sockets
+                    if attempt == 4:
+                        raise
+                    time.sleep(2 + 3 * attempt)
+            parts.append(part)
+        lst = os.path.join(tmp, "list.txt")
+        open(lst, "w").write("".join(f"file '{p}'\n" for p in parts))
+        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", lst, "-ac", "1", "-b:a", "48k", path], check=True)
 
 
 def duration(path):
@@ -229,11 +264,18 @@ def main():
     fresh = lambda k, t, lang: k in files and files[k]["h"] == js_hash(t) and files[k].get("v") == voice_for(lang) and os.path.exists(os.path.join(VOICE_DIR, files[k]["f"]))
     todo = [(k, t, lang) for k, t, lang in items if (not a.only or re.search(a.only, k)) and not fresh(k, t, lang)]
     print(f"{len(items)} narrations, {len(todo)} to generate, generating up to {a.max} now.")
-    done, rejected, gap = 0, 0, 60.0 / a.rpm
-    for k, text, lang in todo[: a.max]:
+    import threading
+    from concurrent.futures import ThreadPoolExecutor
+    lock, stop = threading.Lock(), threading.Event()
+    stats = {"done": 0, "rejected": 0}
+
+    def one(job):
+        k, text, lang = job
+        if stop.is_set():
+            return
         rel = k.replace("/ar", "-ar") + ".mp3"
         path = os.path.join(VOICE_DIR, rel)
-        t0, ok, stop = time.time(), False, False
+        ok = False
         for attempt in range(3):
             try:
                 if a.fake:
@@ -246,37 +288,49 @@ def main():
             except urllib.error.HTTPError as e:
                 msg = e.read().decode(errors="replace")
                 if e.code == 429 and ("PerDay" in msg or "per day" in msg.lower()):
-                    print("Daily quota reached; the next scheduled run continues from here.")
-                    stop = True
-                    break
+                    print("Daily quota reached; the next scheduled run continues from here.", flush=True)
+                    stop.set()
+                    return
                 wait = int((re.search(r'"retryDelay":\s*"(\d+)s"', msg) or [0, 30 * (attempt + 1)])[1])
-                print(f"{k}: HTTP {e.code}, retrying in {wait}s")
+                print(f"{k}: HTTP {e.code}, retrying in {wait}s", flush=True)
                 time.sleep(wait)
                 continue
-            except Exception as e:  # network blips, edge-tts hiccups
-                print(f"{k}: {type(e).__name__} {e}, retrying")
-                time.sleep(10 * (attempt + 1))
+            except Exception as e:
+                print(f"{k}: {type(e).__name__} {e}, retrying", flush=True)
+                time.sleep(5 * (attempt + 1))
                 continue
             good, d, expect = sane(path, text, lang)
             if good or a.fake:
                 ok = True
                 break
-            print(f"{k}: audio looks wrong ({d:.0f}s for ~{expect:.0f}s of text), retrying")
-        if stop:
-            break
-        if not ok:
-            rejected += 1
-            if os.path.exists(path):
-                os.remove(path)
-            files.pop(k, None)
-            print(f"✗ {k}: skipped (the site falls back for this step)")
-            continue
-        files[k] = {"f": rel, "h": js_hash(text), "v": voice_for(lang)}
-        done += 1
-        if done % 10 == 0:
-            json.dump(man, open(MANIFEST, "w"), ensure_ascii=False, indent=0, sort_keys=True)
-        print(f"✓ {k}")
-        time.sleep(max(0, gap - (time.time() - t0)))
+            print(f"{k}: audio looks wrong ({d:.0f}s for ~{expect:.0f}s of text), retrying", flush=True)
+        with lock:
+            if not ok:
+                stats["rejected"] += 1
+                if os.path.exists(path):
+                    os.remove(path)
+                files.pop(k, None)
+                print(f"✗ {k}: skipped (the site falls back for this step)", flush=True)
+                return
+            files[k] = {"f": rel, "h": js_hash(text), "v": voice_for(lang)}
+            stats["done"] += 1
+            if stats["done"] % 20 == 0:
+                json.dump(man, open(MANIFEST, "w"), ensure_ascii=False, indent=0, sort_keys=True)
+            print(f"✓ {k}", flush=True)
+
+    jobs = todo[: a.max]
+    if a.engine == "edge":
+        with ThreadPoolExecutor(4) as pool:
+            list(pool.map(one, jobs))
+    else:
+        gap = 60.0 / a.rpm
+        for job in jobs:
+            t0 = time.time()
+            one(job)
+            if stop.is_set():
+                break
+            time.sleep(max(0, gap - (time.time() - t0)))
+    done, rejected = stats["done"], stats["rejected"]
     json.dump(man, open(MANIFEST, "w"), ensure_ascii=False, indent=0, sort_keys=True)
     print(f"generated {done}, rejected {rejected}; {len(todo) - done} left")
 

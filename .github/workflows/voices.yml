@@ -21,6 +21,7 @@ jobs:
     timeout-minutes: 180
     env:
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      PYTHONUNBUFFERED: "1"
     steps:
       - uses: actions/checkout@v4
       - name: Skip if no key
