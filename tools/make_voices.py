@@ -88,27 +88,38 @@ Return only JSON: {{"<step key>": {{"en": "...", "ar": "..."}}, ...}} with one e
 LESSON:
 {lesson}
 """
-TEXT_MODELS = ["gemini-3.5-flash", "gemini-3-flash-preview", "gemini-2.5-flash"]
+# Tried in order. A model that answers 404 (not offered) or says its daily quota is used up is dropped for the rest of
+# the run, so we don't burn time on it lesson after lesson. Flash-Lite models have the largest free quotas.
+TEXT_MODELS = ["gemini-3.5-flash", "gemini-3.6-flash", "gemini-3.7-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite"]
+DEAD = set()
 
 
 def write_scripts(lesson, gold, key, model):
-    """Try the requested model, then fall back; retry busy (429/503) responses with backoff."""
     last = None
     for m in [model] + [x for x in TEXT_MODELS if x != model]:
-        for attempt in range(4):
+        if m in DEAD:
+            continue
+        for attempt in range(3):
             try:
                 return _write(lesson, gold, key, m)
             except urllib.error.HTTPError as e:
-                last = e
+                msg = e.read().decode(errors="replace")
+                last = RuntimeError(f"{m}: HTTP {e.code} {msg[:160]}")
+                if e.code == 404 or (e.code == 429 and re.search(r"per ?day|PerDay|daily", msg, re.I)):
+                    print(f"  {m}: {'not available' if e.code == 404 else 'daily quota used up'}; not using it again this run", flush=True)
+                    DEAD.add(m)
+                    break
                 if e.code in (429, 500, 503):
-                    time.sleep(10 * (attempt + 1))
+                    wait = int((re.search(r'"retryDelay":\s*"(\d+)s"', msg) or [0, 15 * (attempt + 1)])[1])
+                    time.sleep(min(wait, 60))
                     continue
-                break  # 404 (model not available) etc.: try the next model
+                print(f"  {m}: HTTP {e.code} {msg[:120]}", flush=True)
+                break
             except (TimeoutError, OSError, ValueError, KeyError) as e:  # slow/dropped response or half-written JSON
                 last = e
-                print(f"  {lesson['id']} with {m}: {type(e).__name__}, retrying")
-                time.sleep(5 * (attempt + 1))
-    raise last
+                print(f"  {lesson['id']} with {m}: {type(e).__name__}, retrying", flush=True)
+                time.sleep(5)
+    raise last or RuntimeError("no text model available")
 
 
 def _write(lesson, gold, key, model):
@@ -116,7 +127,7 @@ def _write(lesson, gold, key, model):
     body = {"contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {"responseMimeType": "application/json", "temperature": 0.6}}
     req = urllib.request.Request(API.format(model=model), data=json.dumps(body).encode(), headers={"Content-Type": "application/json", "x-goog-api-key": key})
-    with urllib.request.urlopen(req, timeout=300) as r:
+    with urllib.request.urlopen(req, timeout=240) as r:
         data = json.load(r)
     out = json.loads(data["candidates"][0]["content"]["parts"][0]["text"])
     return {k: {"en": v["en"].strip(), "ar": v["ar"].strip()} for k, v in out.items() if isinstance(v, dict) and v.get("en") and v.get("ar")}
@@ -214,6 +225,7 @@ def main():
     ap.add_argument("--text-model", default=os.environ.get("TEXT_MODEL", "gemini-3.5-flash"), help="model that writes the narration scripts")
     ap.add_argument("--scripts-max", type=int, default=120, help="lessons to write scripts for this run")
     ap.add_argument("--fake", action="store_true", help="write silent files instead of calling the API (for testing)")
+    ap.add_argument("--deadline-min", type=float, default=float(os.environ.get("DEADLINE_MIN", "160")), help="stop new work after this many minutes so results get committed")
     a = ap.parse_args()
     if a.engine == "edge":
         a.voice, a.ar_voice = a.voice or EDGE_DEFAULT["en"], a.ar_voice or EDGE_DEFAULT["ar"]
@@ -236,34 +248,26 @@ def main():
         if k in base:
             scripts[k] = {"src": js_hash(base[k]), "en": v["en"], "ar": v["ar"], "by": "hand"}
     stale = lambda k: scripts.get(k, {}).get("src") != js_hash(base[k])
-    need = [lid for lid, ctx in lessons.items() if (not a.only or any(re.search(a.only, st["key"]) for st in ctx["steps"])) and any(stale(st["key"]) for st in ctx["steps"])]
-    print(f"{len(need)} lessons need narration scripts; writing up to {a.scripts_max} now.")
-    for lid in need[: a.scripts_max]:
-        try:
-            got = {st["key"]: {"en": "[script] " + st["title"], "ar": "[سكريبت] " + st["title"]} for st in lessons[lid]["steps"]} if a.fake else write_scripts(lessons[lid], gold, key, a.text_model)
-        except Exception as e:  # never lose the lessons already written
-            print(f"scripts: skipped {lid} ({type(e).__name__}: {getattr(e, 'code', '')} {e}); continuing")
-            continue
-        for k, v in got.items():
-            if k in base and scripts.get(k, {}).get("by") != "hand":
-                scripts[k] = {"src": js_hash(base[k]), **v}
-        print(f"✎ {lid}: {len(got)} scripts")
-        json.dump(scripts, open(SCRIPTS, "w"), ensure_ascii=False, indent=0, sort_keys=True)
-        time.sleep(0 if a.fake else 6)
-    json.dump(scripts, open(SCRIPTS, "w"), ensure_ascii=False, indent=0, sort_keys=True)
+    T0 = time.time()
+    left = lambda: a.deadline_min * 60 - (time.time() - T0)
     ok = lambda k: not stale(k)
-    items = []
-    # Egyptian Arabic first, then English; English falls back to the on-screen text until a script exists
-    if a.lang in ("ar", "both"):
-        items += [(k + "/ar", scripts[k]["ar"], "ar") for k, t in en if ok(k)]
-    if a.lang in ("en", "both"):
-        items += [(k, scripts[k]["en"] if ok(k) else t, "en") for k, t in en]
-    want = {k for k, _, _ in items}
-    for k in [k for k in files if k not in want and (a.lang == "both" or k.endswith("/ar") == (a.lang == "ar"))]:  # steps that no longer exist
-        files.pop(k)
+    match = lambda k: not a.only or re.search(a.only, k)
     fresh = lambda k, t, lang: k in files and files[k]["h"] == js_hash(t) and files[k].get("v") == voice_for(lang) and os.path.exists(os.path.join(VOICE_DIR, files[k]["f"]))
-    todo = [(k, t, lang) for k, t, lang in items if (not a.only or re.search(a.only, k)) and not fresh(k, t, lang)]
-    print(f"{len(items)} narrations, {len(todo)} to generate, generating up to {a.max} now.")
+
+    def scripted_items(keys):
+        out = []
+        if a.lang in ("ar", "both"):
+            out += [(k + "/ar", scripts[k]["ar"], "ar") for k in keys if ok(k)]
+        if a.lang in ("en", "both"):
+            out += [(k, scripts[k]["en"], "en") for k in keys if ok(k)]
+        return [(k, t, l) for k, t, l in out if match(k) and not fresh(k, t, l)]
+
+    all_keys = [k for k, _ in en]
+    want = set()
+    for k in all_keys:
+        want |= {k, k + "/ar"}
+    for k in [k for k in files if k not in want]:  # steps that no longer exist
+        files.pop(k)
     import threading
     from concurrent.futures import ThreadPoolExecutor
     lock, stop = threading.Lock(), threading.Event()
@@ -318,21 +322,60 @@ def main():
                 json.dump(man, open(MANIFEST, "w"), ensure_ascii=False, indent=0, sort_keys=True)
             print(f"✓ {k}", flush=True)
 
-    jobs = todo[: a.max]
-    if a.engine == "edge":
-        with ThreadPoolExecutor(4) as pool:
-            list(pool.map(one, jobs))
-    else:
-        gap = 60.0 / a.rpm
-        for job in jobs:
-            t0 = time.time()
-            one(job)
-            if stop.is_set():
-                break
-            time.sleep(max(0, gap - (time.time() - t0)))
+
+    def voice(jobs, label):
+        jobs = jobs[: max(0, a.max - stats["done"])]
+        if not jobs:
+            return
+        print(f"voicing {len(jobs)} files ({label})", flush=True)
+        guarded = lambda job: None if left() < 120 else one(job)
+        if a.engine == "edge":
+            with ThreadPoolExecutor(4) as pool:
+                list(pool.map(guarded, jobs))
+        else:
+            gap = 60.0 / a.rpm
+            for job in jobs:
+                t0 = time.time()
+                guarded(job)
+                if stop.is_set() or left() < 120:
+                    break
+                time.sleep(max(0, gap - (time.time() - t0)))
+        json.dump(man, open(MANIFEST, "w"), ensure_ascii=False, indent=0, sort_keys=True)
+
+    # 1. voice every step that already has a finished script
+    voice(scripted_items(all_keys), "steps with scripts")
+
+    # 2. write missing scripts lesson by lesson, voicing each lesson right after, until the time budget is used
+    need = [lid for lid, ctx in lessons.items() if any(match(st["key"]) for st in ctx["steps"]) and any(stale(st["key"]) for st in ctx["steps"])]
+    print(f"{len(need)} lessons need narration scripts.", flush=True)
+    written = 0
+    for lid in need:
+        if written >= a.scripts_max or left() < 20 * 60 or stop.is_set():
+            print("stopping script writing to leave time for voicing and committing", flush=True)
+            break
+        if not a.fake and len(DEAD) >= len(set([a.text_model] + TEXT_MODELS)):
+            print("no text model left with quota today; the next run continues", flush=True)
+            break
+        try:
+            got = {st["key"]: {"en": "[script] " + st["title"], "ar": "[سكريبت] " + st["title"]} for st in lessons[lid]["steps"]} if a.fake else write_scripts(lessons[lid], gold, key, a.text_model)
+        except Exception as e:  # never lose the lessons already written
+            print(f"scripts: skipped {lid} ({e}); continuing", flush=True)
+            continue
+        for k, v in got.items():
+            if k in base and scripts.get(k, {}).get("by") != "hand":
+                scripts[k] = {"src": js_hash(base[k]), **v}
+        written += 1
+        print(f"✎ {lid}: {len(got)} scripts", flush=True)
+        json.dump(scripts, open(SCRIPTS, "w"), ensure_ascii=False, indent=0, sort_keys=True)
+        voice(scripted_items([st["key"] for st in lessons[lid]["steps"]]), lid)
+
+    # 3. English for steps still without a script, from the on-screen text (replaced once their script exists)
+    if a.lang in ("en", "both"):
+        voice([(k, t, "en") for k, t in en if not ok(k) and match(k) and not fresh(k, t, "en")], "English fallback, no script yet")
     done, rejected = stats["done"], stats["rejected"]
     json.dump(man, open(MANIFEST, "w"), ensure_ascii=False, indent=0, sort_keys=True)
-    print(f"generated {done}, rejected {rejected}; {len(todo) - done} left")
+    have = sum(1 for k, _ in en for kk in (k, k + "/ar") if kk in files)
+    print(f"generated {done}, rejected {rejected} this run; {have} of {2 * len(en)} narrations now have audio; {sum(1 for k, _ in en if ok(k))} of {len(en)} steps have scripts")
 
 
 if __name__ == "__main__":
