@@ -104,6 +104,10 @@ def write_scripts(lesson, gold, key, model):
                     time.sleep(10 * (attempt + 1))
                     continue
                 break  # 404 (model not available) etc.: try the next model
+            except (TimeoutError, OSError, ValueError, KeyError) as e:  # slow/dropped response or half-written JSON
+                last = e
+                print(f"  {lesson['id']} with {m}: {type(e).__name__}, retrying")
+                time.sleep(5 * (attempt + 1))
     raise last
 
 
@@ -112,7 +116,7 @@ def _write(lesson, gold, key, model):
     body = {"contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {"responseMimeType": "application/json", "temperature": 0.6}}
     req = urllib.request.Request(API.format(model=model), data=json.dumps(body).encode(), headers={"Content-Type": "application/json", "x-goog-api-key": key})
-    with urllib.request.urlopen(req, timeout=180) as r:
+    with urllib.request.urlopen(req, timeout=300) as r:
         data = json.load(r)
     out = json.loads(data["candidates"][0]["content"]["parts"][0]["text"])
     return {k: {"en": v["en"].strip(), "ar": v["ar"].strip()} for k, v in out.items() if isinstance(v, dict) and v.get("en") and v.get("ar")}
@@ -169,9 +173,9 @@ def main():
     for lid in need[: a.scripts_max]:
         try:
             got = {st["key"]: {"en": "[script] " + st["title"], "ar": "[سكريبت] " + st["title"]} for st in lessons[lid]["steps"]} if a.fake else write_scripts(lessons[lid], gold, key, a.text_model)
-        except (urllib.error.HTTPError, urllib.error.URLError, KeyError, ValueError) as e:
-            print(f"scripts stopped at {lid}: {getattr(e, 'code', '')} {e}")
-            break
+        except Exception as e:  # never lose the lessons already written
+            print(f"scripts: skipped {lid} ({type(e).__name__}: {getattr(e, 'code', '')} {e}); continuing")
+            continue
         for k, v in got.items():
             if k in base and scripts.get(k, {}).get("by") != "hand":
                 scripts[k] = {"src": js_hash(base[k]), **v}
@@ -217,7 +221,11 @@ def main():
                 print(f"{k}: HTTP {e.code}: {msg[:300]}")
                 attempt = None
                 break
-            except (urllib.error.URLError, KeyError, IndexError) as e:
+            except (urllib.error.URLError, TimeoutError, OSError, KeyError, IndexError) as e:
+                if attempt < 4:
+                    print(f"{k}: {type(e).__name__}, retrying")
+                    time.sleep(10 * (attempt + 1))
+                    continue
                 print(f"{k}: {e}")
                 attempt = None
                 break
