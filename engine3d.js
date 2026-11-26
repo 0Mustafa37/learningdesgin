@@ -350,7 +350,7 @@ const load = (l, idx) => {
   l.nodes.forEach((n, i) => { nodes[n.id] = buildNode(n, i); });
   const xs = l.nodes.map((n) => n.x - 400), zs = l.nodes.map((n) => n.y - 220);
   corners = [];
-  for (const x of [Math.min(...xs) - 110, Math.max(...xs) + 110]) for (const y of [0, 110]) for (const z of [Math.min(...zs) - 90, Math.max(...zs) + 150]) corners.push(new THREE.Vector3(x, y, z));
+  for (const x of [Math.min(...xs) - 160, Math.max(...xs) + 110]) for (const y of [0, 110]) for (const z of [Math.min(...zs) - 90, Math.max(...zs) + 170]) corners.push(new THREE.Vector3(x, y, z));
   Object.assign(view, DEF(), { zoom: 1, focus: null, f: 0, z: 1 });
   stepIdx = -1; setStep(idx, now, true);
 };

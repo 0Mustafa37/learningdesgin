@@ -226,7 +226,7 @@
     const last = stepIdx === lesson.steps.length - 1;
     if (last && !isDone(lesson.id)) { store.data.lessons[lesson.id] = true; store.save(); renderSidebar(); }
 
-    const levelClass = { Beginner: "b-green", Intermediate: "b-sky", Advanced: "b-rose", Senior: "b-sky", Staff: "b-violet" }[lesson.level] || "b-green";
+    const levelClass = { Beginner: "b-green", Intermediate: "b-sky", Advanced: "b-rose", Senior: "b-sky", Staff: "b-violet", Lead: "b-amber", CTO: "b-rose" }[lesson.level] || "b-green";
     const q = lesson.qa;
     const idxNum = ORDER.indexOf(lesson.id);
     const next = lesson.steps[stepIdx + 1];
