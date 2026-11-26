@@ -5,8 +5,9 @@ Runs in GitHub Actions (.github/workflows/voices.yml) with the GEMINI_API_KEY se
     pip install playwright && python -m playwright install chromium   # ffmpeg must be on PATH
     GEMINI_API_KEY=... python tools/make_voices.py --max 50
 
-The narration text comes from the site itself (window.ATLAS.narrations()), so the audio always matches what the
-browser would read. Each file is stored with a hash of its text in assets/voice/manifest.json; the site only plays a
+The narration text comes from the site itself (window.ATLAS.narrations()). For every step a narration script is
+written first (Gemini text model, guided by the hand-written lesson in data/scripts-gold.js) in English and Egyptian
+Arabic, kept in assets/voice/scripts.json, then voiced. Each file is stored with a hash of its text in assets/voice/manifest.json; the site only plays a
 file whose hash matches the current text, and this script regenerates files whose text changed. It is resumable:
 run it again (the workflow runs daily) until everything is generated.
 """
@@ -15,7 +16,7 @@ import argparse, base64, functools, http.server, json, os, re, subprocess, sys, 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 VOICE_DIR = os.path.join(ROOT, "assets", "voice")
 MANIFEST = os.path.join(VOICE_DIR, "manifest.json")
-AR_TEXT = os.path.join(VOICE_DIR, "ar-text.json")  # Arabic narration, translated once and kept in the repo
+SCRIPTS = os.path.join(VOICE_DIR, "scripts.json")  # narration scripts {key: {src, en, ar}}, written once and kept in the repo
 API = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 STYLE = {
     "en": "Read this aloud as a calm, clear engineering teacher, at a steady pace: ",
@@ -51,34 +52,52 @@ def narrations():
         pg.goto("http://127.0.0.1:8798/index.html#/")
         pg.wait_for_function("window.ATLAS && window.ATLAS.narrations")
         items = pg.evaluate("ATLAS.narrations()")
+        lessons = {}
+        for k, _ in items:
+            lid = k.rsplit("/", 1)[0]
+            if lid not in lessons:
+                lessons[lid] = pg.evaluate("(id) => ATLAS.lessonContext(id)", lid)
+        gold = pg.evaluate("window.SCRIPTS_GOLD || {}")
         b.close()
     srv.shutdown()
-    return items
+    return items, lessons, gold
 
 
-TRANSLATE = """You write narration for an Egyptian backend-engineering course. Rewrite each English narration below in
-Egyptian colloquial Arabic (عامية مصرية), the way a friendly Egyptian senior engineer explains things out loud to a colleague.
-Not Modern Standard Arabic, not a literal translation: natural spoken Egyptian.
-- Keep technical terms in English exactly as Egyptian developers say them (timeout, cache, retry, worker, database, query,
-  index, load balancer, queue, deploy, p95…), with "الـ" before them where natural (الـ cache, الـ timeout).
-- Keep numbers, units, code and product names as they are (2 s, 50 ms, PostgreSQL, Redis).
-- Short spoken sentences. Same meaning, same length or shorter. Start the key idea with "الفكرة الأساسية:".
-Example:
-EN: "Calls never return. Each one holds a worker thread, and within a minute every checkout worker is stuck."
-EG: "الطلبات مش بترجع خالص. كل طلب ماسك worker، وفي أقل من دقيقة كل الـ workers بتوع الـ checkout بيبقوا واقفين مستنيين."
-Return only a JSON object mapping each id to its Egyptian Arabic text.
+WRITE = """You are writing the voice-over for "Backend Atlas", an animated 3D course that prepares backend engineers for
+system-design and senior interviews. The learner watches a 3D diagram of the step (units, pipes, packets moving) while
+your narration plays. Write one narration script per step of the lesson below, in two versions:
 
+"en": natural spoken English.
+"ar": Egyptian colloquial Arabic (عامية مصرية), the way a friendly Egyptian senior engineer explains to a colleague.
+      Not Modern Standard Arabic and not a literal translation. Keep technical terms in English as Egyptian developers
+      say them (الـ cache، الـ timeout، retry، worker، query، index، deploy…). Keep numbers, units, code names in English.
+
+Each script must be EXCELLENT teaching, 45 to 75 seconds when spoken (about 110 to 170 English words):
+1. Open with what is happening in the diagram right now ("Look at…", "Watch the…" / "بُص على…").
+2. Explain WHY it happens: the mechanism, not just the fact.
+3. Make it concrete with the step's real numbers, code or setup (use only facts given below; do not invent figures).
+4. Add the practical edge: a common mistake, a trade-off, or how to say it in an interview.
+5. End with exactly "Key idea: …" / "الفكرة الأساسية: …" restating the step's key idea.
+Spoken style only: short sentences, no lists, no markdown, no emojis, no headings. Each step builds on the previous one.
+
+Here is the quality and tone to match (a hand-written lesson):
+{gold}
+
+Return only JSON: {{"<step key>": {{"en": "...", "ar": "..."}}, ...}} with one entry for every step key listed.
+
+LESSON:
+{lesson}
 """
 TEXT_MODELS = ["gemini-3.5-flash", "gemini-3-flash-preview", "gemini-2.5-flash"]
 
 
-def translate(batch, key, model):
+def write_scripts(lesson, gold, key, model):
     """Try the requested model, then fall back; retry busy (429/503) responses with backoff."""
     last = None
     for m in [model] + [x for x in TEXT_MODELS if x != model]:
         for attempt in range(4):
             try:
-                return _translate(batch, key, m)
+                return _write(lesson, gold, key, m)
             except urllib.error.HTTPError as e:
                 last = e
                 if e.code in (429, 500, 503):
@@ -88,14 +107,15 @@ def translate(batch, key, model):
     raise last
 
 
-def _translate(batch, key, model):
-    body = {"contents": [{"parts": [{"text": TRANSLATE + json.dumps(dict(batch), ensure_ascii=False)}]}],
-            "generationConfig": {"responseMimeType": "application/json", "temperature": 0.2}}
+def _write(lesson, gold, key, model):
+    prompt = WRITE.format(gold=json.dumps(gold, ensure_ascii=False, indent=1), lesson=json.dumps(lesson, ensure_ascii=False, indent=1))
+    body = {"contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {"responseMimeType": "application/json", "temperature": 0.6}}
     req = urllib.request.Request(API.format(model=model), data=json.dumps(body).encode(), headers={"Content-Type": "application/json", "x-goog-api-key": key})
     with urllib.request.urlopen(req, timeout=180) as r:
         data = json.load(r)
     out = json.loads(data["candidates"][0]["content"]["parts"][0]["text"])
-    return {k: v.strip() for k, v in out.items() if isinstance(v, str) and v.strip()}
+    return {k: {"en": v["en"].strip(), "ar": v["ar"].strip()} for k, v in out.items() if isinstance(v, dict) and v.get("en") and v.get("ar")}
 
 
 def tts(text, lang, key, model, voice):
@@ -125,7 +145,8 @@ def main():
     ap.add_argument("--ar-voice", default=os.environ.get("TTS_AR_VOICE", "Sulafat"), help="Egyptian Arabic voice")
     ap.add_argument("--only", default="", help="regex on keys, e.g. '^timeouts-retries/'")
     ap.add_argument("--lang", default="both", choices=["en", "ar", "both"], help="which narration to voice")
-    ap.add_argument("--text-model", default=os.environ.get("TEXT_MODEL", "gemini-3.5-flash"), help="model used to translate to Arabic")
+    ap.add_argument("--text-model", default=os.environ.get("TEXT_MODEL", "gemini-3.5-flash"), help="model that writes the narration scripts")
+    ap.add_argument("--scripts-max", type=int, default=40, help="lessons to write scripts for this run")
     ap.add_argument("--fake", action="store_true", help="write silent files instead of calling the API (for testing)")
     a = ap.parse_args()
     key = os.environ.get("GEMINI_API_KEY", "")
@@ -136,29 +157,35 @@ def main():
     files = man.setdefault("files", {})
     man.update({"model": a.model, "voice": a.voice, "ar_voice": a.ar_voice})
     voice_for = lambda lang: a.ar_voice if lang == "ar" else a.voice
-    en = narrations()
+    en, lessons, gold = narrations()
+    scripts = json.load(open(SCRIPTS)) if os.path.exists(SCRIPTS) else {}
+    base = dict(en)
+    for k, v in gold.items():  # hand-written scripts always win
+        if k in base:
+            scripts[k] = {"src": js_hash(base[k]), "en": v["en"], "ar": v["ar"], "by": "hand"}
+    stale = lambda k: scripts.get(k, {}).get("src") != js_hash(base[k])
+    need = [lid for lid, ctx in lessons.items() if (not a.only or any(re.search(a.only, st["key"]) for st in ctx["steps"])) and any(stale(st["key"]) for st in ctx["steps"])]
+    print(f"{len(need)} lessons need narration scripts; writing up to {a.scripts_max} now.")
+    for lid in need[: a.scripts_max]:
+        try:
+            got = {st["key"]: {"en": "[script] " + st["title"], "ar": "[سكريبت] " + st["title"]} for st in lessons[lid]["steps"]} if a.fake else write_scripts(lessons[lid], gold, key, a.text_model)
+        except (urllib.error.HTTPError, urllib.error.URLError, KeyError, ValueError) as e:
+            print(f"scripts stopped at {lid}: {getattr(e, 'code', '')} {e}")
+            break
+        for k, v in got.items():
+            if k in base and scripts.get(k, {}).get("by") != "hand":
+                scripts[k] = {"src": js_hash(base[k]), **v}
+        print(f"✎ {lid}: {len(got)} scripts")
+        json.dump(scripts, open(SCRIPTS, "w"), ensure_ascii=False, indent=0, sort_keys=True)
+        time.sleep(0 if a.fake else 6)
+    json.dump(scripts, open(SCRIPTS, "w"), ensure_ascii=False, indent=0, sort_keys=True)
+    ok = lambda k: not stale(k)
     items = []
+    # Egyptian Arabic first, then English; English falls back to the on-screen text until a script exists
     if a.lang in ("ar", "both"):
-        ar = json.load(open(AR_TEXT)) if os.path.exists(AR_TEXT) else {}
-        need = [(k, t) for k, t in en if (not a.only or re.search(a.only, k)) and ar.get(k, {}).get("src") != js_hash(t)]
-        print(f"{len(need)} steps need an Egyptian Arabic version.")
-        for i in range(0, len(need), 8):
-            batch = need[i: i + 8]
-            try:
-                got = {k: f"[ar] {t[:40]}" for k, t in batch} if a.fake else translate(batch, key, a.text_model)
-            except (urllib.error.HTTPError, urllib.error.URLError, KeyError, ValueError) as e:
-                print(f"translation stopped: {getattr(e, 'code', '')} {e}")
-                break
-            for k, t in batch:
-                if k in got:
-                    ar[k] = {"src": js_hash(t), "ar": got[k]}
-            json.dump(ar, open(AR_TEXT, "w"), ensure_ascii=False, indent=0, sort_keys=True)
-            time.sleep(1 if a.fake else 4)
-    # Egyptian Arabic first (it's the one people asked for), then English
-    if a.lang in ("ar", "both"):
-        items += [(k + "/ar", ar[k]["ar"], "ar") for k, t in en if ar.get(k, {}).get("src") == js_hash(t)]
+        items += [(k + "/ar", scripts[k]["ar"], "ar") for k, t in en if ok(k)]
     if a.lang in ("en", "both"):
-        items += [(k, t, "en") for k, t in en]
+        items += [(k, scripts[k]["en"] if ok(k) else t, "en") for k, t in en]
     want = {k for k, _, _ in items}
     for k in [k for k in files if k not in want and (a.lang == "both" or k.endswith("/ar") == (a.lang == "ar"))]:  # steps that no longer exist
         files.pop(k)

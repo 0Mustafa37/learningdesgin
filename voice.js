@@ -4,11 +4,22 @@
   const A = window.ATLAS;
   if (!A) return;
   const hash = (s) => { let h = 5381; for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0; return h.toString(16); };
-  let manifest = {}, arText = {};
-  fetch("assets/voice/ar-text.json", { cache: "no-cache" }).then((r) => (r.ok ? r.json() : {})).then((m) => { arText = m; }).catch(() => {});
+  let manifest = {}, scripts = {};
+  fetch("assets/voice/scripts.json", { cache: "no-cache" }).then((r) => (r.ok ? r.json() : {})).then((m) => { scripts = m; paintScript(); }).catch(() => {});
   const lang = () => (A.store.data.voiceLang === "ar" ? "ar" : "en");
-  /* Egyptian Arabic narration (generated with Gemini) when it matches the current English text */
-  const arNarration = (id, idx, en) => { const t = arText[`${id}/${idx}`]; return t && t.src === hash(en) ? t.ar : null; };
+  /* narration scripts (English + Egyptian Arabic) when they were written for the current version of the step */
+  const scriptFor = (id, idx, en) => { const t = scripts[`${id}/${idx}`] || (window.SCRIPTS_GOLD || {})[`${id}/${idx}`]; return t && (!t.src || t.src === hash(en)) ? t : null; };
+  const arNarration = (id, idx, en) => scriptFor(id, idx, en)?.ar || null;
+  const paintScript = () => {
+    const row = $(".vc-row"); if (!row || !cur.id) return;
+    let d = $(".vc-script");
+    const sc = scriptFor(cur.id, cur.idx, A.narration(cur.id, cur.idx));
+    if (!sc) { d?.remove(); return; }
+    if (!d) { d = document.createElement("details"); d.className = "vc-script"; row.after(d); }
+    const ar = lang() === "ar"; d.dir = ar ? "rtl" : "ltr";
+    d.innerHTML = `<summary>${ar ? "📜 الشرح الكامل" : "📜 Full explanation"}</summary><p ${ar ? 'dir="rtl" lang="ar"' : ""}></p>`;
+    d.querySelector("p").textContent = ar ? sc.ar : sc.en;
+  };
   /* the browser's own Arabic voices are robotic, except the neural ones (Edge: "Microsoft Salma/Shakir Online (Natural)") */
   const naturalArabic = () => synth && synth.getVoices().filter((v) => /^ar/i.test(v.lang) && /natural|online|neural/i.test(v.name)).sort((a, b) => /eg/i.test(b.lang) - /eg/i.test(a.lang))[0];
   fetch("assets/voice/manifest.json", { cache: "no-cache" }).then((r) => (r.ok ? r.json() : {})).then((m) => { manifest = m.files || {}; }).catch(() => {});
@@ -90,7 +101,7 @@
 
   const playStep = async () => {
     const my = ++token; synth?.cancel(); if (audio) { audio.pause(); audio = null; }
-    const { id, idx } = cur, en = A.narration(id, idx), ar = lang() === "ar" ? arNarration(id, idx, en) : null;
+    const { id, idx } = cur, base = A.narration(id, idx), en = scriptFor(id, idx, base)?.en || base, ar = lang() === "ar" ? arNarration(id, idx, base) : null;
     stepStart = performance.now();
     window.Stage3D?.replay();
     if (ar) await speak(ar, `${id}/${idx}/ar`, "ar", my);
@@ -118,8 +129,8 @@
       cur = { id, idx };
       if (moved && mode && !autoNav) { mode = null; stopAll(); }
       const wasAuto = autoNav; autoNav = false;
-      paintButtons(); addClipBadge();
-      $("#vcLang")?.addEventListener("click", () => { A.store.data.voiceLang = lang() === "ar" ? "en" : "ar"; A.store.save(); paintButtons(); if (mode) playStep(); });
+      paintButtons(); addClipBadge(); paintScript();
+      $("#vcLang")?.addEventListener("click", () => { A.store.data.voiceLang = lang() === "ar" ? "en" : "ar"; A.store.save(); paintButtons(); paintScript(); if (mode) playStep(); });
       $("#vcSay")?.addEventListener("click", () => { if (mode) { mode = null; stopAll(); paintButtons(); return; } mode = "say"; paintButtons(); playStep(); });
       $("#vcWatch")?.addEventListener("click", () => { if (mode === "watch") { mode = null; stopAll(); paintButtons(); return; } mode = "watch"; paintButtons(); $("#stageSlot")?.scrollIntoView({ block: "nearest", behavior: "smooth" }); playStep(); });
       if (wasAuto && mode === "watch") requestAnimationFrame(playStep);

@@ -28,7 +28,7 @@ python3 -m http.server 8000
 
 The free tier allows only about 10 voice files a day. Enabling billing on the AI Studio project lifts that (the whole course is a few hundred thousand characters, typically a dollar or two).
 
-`tools/make_voices.py` reads the narration text from the site, calls `gemini-3.1-flash-tts-preview`, saves MP3s in `assets/voice/` with a hash of the text, and commits them. It resumes where it stopped and runs daily, so free-tier quotas are fine. Edited steps are re-voiced automatically. After voices exist, re-run `tools/make_clips.py` to put narration into the clips.
+Before voicing, every step gets a **narration script** (45–75 s, English + Egyptian Arabic): what the diagram shows, why it happens, the real numbers, a common mistake or interview angle, and the key idea. Gemini writes them per lesson, matching the hand-written Timeouts & Retries scripts in `data/scripts-gold.js`; they are kept in `assets/voice/scripts.json` and shown under each step as "Full explanation". `tools/make_voices.py` reads the narration text from the site, calls `gemini-3.1-flash-tts-preview`, saves MP3s in `assets/voice/` with a hash of the text, and commits them. It resumes where it stopped and runs daily, so free-tier quotas are fine. Edited steps are re-voiced automatically. After voices exist, re-run `tools/make_clips.py` to put narration into the clips.
 
 ## Checks
 
