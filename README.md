@@ -8,6 +8,9 @@ Revision site for backend interviews, with a home page, a timed practice mode (`
 - **Try it labs** on 10 lessons: Timeouts & Retries, Rate Limiting, Caching, Load Balancing, Sharding, Message Queues, Retry Storms, Indexes (a PostgreSQL `EXPLAIN ANALYZE` lab), Django N+1 and connection pooling. Change the setup and a small simulation replays the scene with your settings. `data/labs.js`, `data/labs2.js`.
 - **Draw it yourself** (`#/draw`): 9 design problems on a board, checked against a rubric of required parts, connections and red flags, with a model answer to compare. `draw.js`.
 - **Today** (`#/today`): spaced-repetition review of finished lessons, weak practice answers and Django questions marked "review later" (Leitner boxes: 1, 2, 4, 8, 16, 32 days).
+- **Listen and Play as video**: every step can be read aloud (🔊), and "Play as video" runs the lesson by itself with captions. Audio comes from Gemini TTS when generated (see below), otherwise from the browser's voice. `voice.js`.
+- **Voice answers** in Practice: answer out loud, see the transcript, and the checklist points you covered are ticked for you (Chrome, Edge, Safari).
+- **Clips**: short captioned MP4s of showcase lessons, rendered from the live scene by `tools/make_clips.py`.
 - **Arabic key ideas** for every System Design step (toggle "عربي" on the key idea). `data/ar-keys.js`.
 - **Progress sync** (optional): a Django + DRF service in `sync-api/`. Off until the `atlas-sync` meta tag in `index.html` points at a deployed copy.
 
@@ -16,6 +19,14 @@ No build step, but the 3D engine is an ES module, so serve the folder rather tha
 ```bash
 python3 -m http.server 8000
 ```
+
+## Narration (Gemini voices)
+
+1. Create a key at [Google AI Studio](https://aistudio.google.com/apikey).
+2. In the repo: Settings → Secrets and variables → Actions → New repository secret, name `GEMINI_API_KEY`.
+3. Actions → **voices** → Run workflow (pick a voice such as Kore, Charon, Puck or Aoede).
+
+`tools/make_voices.py` reads the narration text from the site, calls `gemini-3.1-flash-tts-preview`, saves MP3s in `assets/voice/` with a hash of the text, and commits them. It resumes where it stopped and runs daily, so free-tier quotas are fine. Edited steps are re-voiced automatically. After voices exist, re-run `tools/make_clips.py` to put narration into the clips.
 
 ## Checks
 

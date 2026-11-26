@@ -12,7 +12,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
       - name: Syntax
-        run: for f in app.js draw.js sync.js data/*.js; do node --check "$f"; done && node --input-type=module --check < engine3d.js
+        run: for f in app.js draw.js sync.js voice.js data/*.js; do node --check "$f"; done && node --input-type=module --check < engine3d.js
       - name: Labs and draw rubrics
         run: node tests/data.test.js
       - uses: actions/setup-python@v5
